@@ -1,0 +1,48 @@
+package com.lzm.player.util;
+
+/**
+ * 版权：麻瓜 版权所有
+ *
+ * @author ${LZM}
+ * 版本：1.0
+ * 创建日期：19-3-319
+ * qq邮箱：1198492751@qq.com
+ */
+public class MTimeUtil {
+
+    public static String secdsToDateFormat(int secds, int totalsecds) {
+
+        long hours = secds / 3600;
+        long minutes = (secds % 3600) / 60;
+        long seconds = secds % 60;
+
+
+        String sh = "00";
+        if (hours > 0) {
+            sh = "0" + hours;
+        } else {
+            sh = hours + "";
+        }
+
+        String sm = "00";
+        if (minutes > 0) {
+            sm = "0" + minutes;
+        } else {
+            sm = minutes + "";
+        }
+
+        String ss = "00";
+        if (seconds > 0) {
+            ss = "0" + seconds;
+        } else {
+            ss = seconds + "";
+        }
+
+        if (totalsecds >= 3600) {
+            return sh + ":" + sm + ":" + ss;
+        }
+
+
+        return sm + ":" + ss;
+    }
+}
