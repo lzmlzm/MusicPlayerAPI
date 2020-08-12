@@ -14,7 +14,7 @@ else()
 
 endif()
 # cmakelists 设置c++11
-
+file(GLOB native_srcs "src/main/cpp/*.cpp")
 add_library(
         native-lib
         SHARED
@@ -23,7 +23,8 @@ add_library(
         MCallJava.cpp
         MFFmpeg.cpp
         MQueue.cpp
-        MPlaystatus.cpp)
+        MPlaystatus.cpp
+        ${native_srcs})
 
 find_library(
         log-lib
@@ -68,13 +69,11 @@ set_target_properties(swscale
 
 target_link_libraries(
         native-lib
-        avcodec-57
-        avdevice-57
-        avfilter-6
-        avformat-57
-        avutil-55
-        postproc-54
-        swresample-2
-        swscale-4
+        avcodec
+        avfilter
+        avformat
+        avutil
+        swresample
+        swscale
         OpenSLES
         ${log-lib})
