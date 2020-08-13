@@ -1,0 +1,75 @@
+{
+  "stringTable": {
+    "0": "/media/lzm/T5/VideoApp/app/.cxx/cmake/release/armeabi-v7a",
+    "1": "--target=armv7-none-linux-androideabi22 --gcc-toolchain=/home/lzm/下载/android-ndk-r21b-linux-x86_64/android-ndk-r21b/toolchains/llvm/prebuilt/linux-x86_64 --sysroot=/home/lzm/下载/android-ndk-r21b-linux-x86_64/android-ndk-r21b/toolchains/llvm/prebuilt/linux-x86_64/sysroot -Dnative_lib_EXPORTS -I/media/lzm/T5/VideoApp/app/src/main/cpp/include -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -march=armv7-a -mthumb -Wformat -Werror=format-security -frtti -fexceptions -std=c++11 -Oz -DNDEBUG -fPIC"
+  },
+  "buildFiles": [
+    "/home/lzm/下载/android-ndk-r21b-linux-x86_64/android-ndk-r21b/build/cmake/android.toolchain.cmake",
+    "/home/lzm/下载/android-ndk-r21b-linux-x86_64/android-ndk-r21b/build/cmake/platforms.cmake",
+    "/media/lzm/T5/VideoApp/app/src/main/cpp/CMakeLists.txt"
+  ],
+  "cleanCommands": [
+    "/home/lzm/Android/Sdk/cmake/3.10.2.4988404/bin/ninja -C \"/media/lzm/T5/VideoApp/app/.cxx/cmake/release/armeabi-v7a\" clean"
+  ],
+  "buildTargetsCommand": "/home/lzm/Android/Sdk/cmake/3.10.2.4988404/bin/ninja  -C \"/media/lzm/T5/VideoApp/app/.cxx/cmake/release/armeabi-v7a\" {LIST_OF_TARGETS_TO_BUILD}",
+  "libraries": {
+    "native-lib-Release-armeabi-v7a": {
+      "buildCommand": "/home/lzm/Android/Sdk/cmake/3.10.2.4988404/bin/ninja -C \"/media/lzm/T5/VideoApp/app/.cxx/cmake/release/armeabi-v7a\" native-lib",
+      "buildType": "release",
+      "toolchain": "3226010040",
+      "abi": "armeabi-v7a",
+      "artifactName": "native-lib",
+      "files": [
+        {
+          "src": "/media/lzm/T5/VideoApp/app/src/main/cpp/native-lib.cpp",
+          "flagsOrdinal": 1,
+          "workingDirectoryOrdinal": 0
+        },
+        {
+          "src": "/media/lzm/T5/VideoApp/app/src/main/cpp/MAudio.cpp",
+          "flagsOrdinal": 1,
+          "workingDirectoryOrdinal": 0
+        },
+        {
+          "src": "/media/lzm/T5/VideoApp/app/src/main/cpp/MCallJava.cpp",
+          "flagsOrdinal": 1,
+          "workingDirectoryOrdinal": 0
+        },
+        {
+          "src": "/media/lzm/T5/VideoApp/app/src/main/cpp/MFFmpeg.cpp",
+          "flagsOrdinal": 1,
+          "workingDirectoryOrdinal": 0
+        },
+        {
+          "src": "/media/lzm/T5/VideoApp/app/src/main/cpp/MQueue.cpp",
+          "flagsOrdinal": 1,
+          "workingDirectoryOrdinal": 0
+        },
+        {
+          "src": "/media/lzm/T5/VideoApp/app/src/main/cpp/MPlaystatus.cpp",
+          "flagsOrdinal": 1,
+          "workingDirectoryOrdinal": 0
+        }
+      ],
+      "headers": [],
+      "output": "/media/lzm/T5/VideoApp/app/build/intermediates/cmake/release/obj/armeabi-v7a/libnative-lib.so",
+      "runtimeFiles": [
+        "/media/lzm/T5/VideoApp/app/src/main/cpp/jniLibs/armeabi-v7a/libavcodec.so",
+        "/media/lzm/T5/VideoApp/app/src/main/cpp/jniLibs/armeabi-v7a/libavfilter.so",
+        "/media/lzm/T5/VideoApp/app/src/main/cpp/jniLibs/armeabi-v7a/libavformat.so",
+        "/media/lzm/T5/VideoApp/app/src/main/cpp/jniLibs/armeabi-v7a/libavutil.so",
+        "/media/lzm/T5/VideoApp/app/src/main/cpp/jniLibs/armeabi-v7a/libswresample.so",
+        "/media/lzm/T5/VideoApp/app/src/main/cpp/jniLibs/armeabi-v7a/libswscale.so"
+      ]
+    }
+  },
+  "toolchains": {
+    "3226010040": {
+      "cppCompilerExecutable": "/home/lzm/下载/android-ndk-r21b-linux-x86_64/android-ndk-r21b/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++"
+    }
+  },
+  "cFileExtensions": [],
+  "cppFileExtensions": [
+    "cpp"
+  ]
+}

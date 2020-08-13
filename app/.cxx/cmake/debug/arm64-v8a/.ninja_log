@@ -1,0 +1,27 @@
+# ninja log v5
+0	19	0	clean	2ac074f86a1489a6
+0	4	0	clean	2ac074f86a1489a6
+0	79	0	clean	2ac074f86a1489a6
+2	27	1597312945	CMakeFiles/native-lib.dir/MPlaystatus.cpp.o	757cbac98dea5b89
+1	239	1597312946	CMakeFiles/native-lib.dir/MCallJava.cpp.o	b0ae40ee7b54b2f6
+1	1043	1597312946	CMakeFiles/native-lib.dir/MAudio.cpp.o	6a924fff74a2ef82
+2	1082	1597312946	CMakeFiles/native-lib.dir/MFFmpeg.cpp.o	f5ba4e5da84b8aac
+1	1130	1597312946	CMakeFiles/native-lib.dir/native-lib.cpp.o	7909ef6e91725258
+2	1180	1597312947	CMakeFiles/native-lib.dir/MQueue.cpp.o	1c9850a99b0691f
+1181	1377	1597312947	/media/lzm/T5/VideoApp/app/build/intermediates/cmake/debug/obj/arm64-v8a/libnative-lib.so	8db890ab316e1675
+0	8	0	clean	2ac074f86a1489a6
+0	5	0	clean	2ac074f86a1489a6
+0	9	0	clean	2ac074f86a1489a6
+0	5	0	clean	2ac074f86a1489a6
+10	42	1597313037	CMakeFiles/native-lib.dir/MPlaystatus.cpp.o	757cbac98dea5b89
+8	211	1597313037	CMakeFiles/native-lib.dir/MCallJava.cpp.o	b0ae40ee7b54b2f6
+8	927	1597313038	CMakeFiles/native-lib.dir/MAudio.cpp.o	6a924fff74a2ef82
+9	955	1597313038	CMakeFiles/native-lib.dir/MFFmpeg.cpp.o	f5ba4e5da84b8aac
+7	992	1597313038	CMakeFiles/native-lib.dir/native-lib.cpp.o	7909ef6e91725258
+9	1020	1597313038	CMakeFiles/native-lib.dir/MQueue.cpp.o	1c9850a99b0691f
+1020	1219	1597313038	/media/lzm/T5/VideoApp/app/build/intermediates/cmake/debug/obj/arm64-v8a/libnative-lib.so	8db890ab316e1675
+1	4	0	clean	2ac074f86a1489a6
+0	4	0	clean	2ac074f86a1489a6
+0	4	0	clean	2ac074f86a1489a6
+0	3	0	clean	2ac074f86a1489a6
+0	4	0	clean	2ac074f86a1489a6
