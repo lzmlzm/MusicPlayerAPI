@@ -14,7 +14,12 @@ else()
 
 endif()
 # cmakelists 设置c++11
-file(GLOB native_srcs "src/main/cpp/*.cpp")
+#file(GLOB native_srcs "src/main/cpp/*.cpp")
+
+set(DIR ${CMAKE_SOURCE_DIR}/include)
+
+include_directories(${DIR})
+
 add_library(
         native-lib
         SHARED
@@ -24,15 +29,11 @@ add_library(
         MFFmpeg.cpp
         MQueue.cpp
         MPlaystatus.cpp
-        ${native_srcs})
+        )
 
 find_library(
         log-lib
         log)
-
-set(DIR ${CMAKE_SOURCE_DIR}/include)
-
-include_directories(${DIR})
 
 add_library(avcodec SHARED IMPORTED)
 set_target_properties(avcodec
@@ -54,12 +55,10 @@ set_target_properties(avutil
         PROPERTIES IMPORTED_LOCATION
         ${CMAKE_SOURCE_DIR}/jniLibs/${ANDROID_ABI}/libavutil.so)
 
-
 add_library(swresample SHARED IMPORTED)
 set_target_properties(swresample
         PROPERTIES IMPORTED_LOCATION
         ${CMAKE_SOURCE_DIR}/jniLibs/${ANDROID_ABI}/libswresample.so)
-
 
 add_library(swscale SHARED IMPORTED)
 set_target_properties(swscale

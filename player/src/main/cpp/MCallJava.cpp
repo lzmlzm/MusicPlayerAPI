@@ -4,6 +4,8 @@
 
 #include "MCallJava.h"
 
+//JNI层回调数据给JAVA
+
 MCallJava::MCallJava(JavaVM *javaVM, JNIEnv *env, jobject *obj) {
 
     this->javaVM=javaVM;

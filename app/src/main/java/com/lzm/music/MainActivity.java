@@ -1,12 +1,37 @@
 package com.lzm.music;
 
+import android.annotation.SuppressLint;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
-import android.support.v7.app.AppCompatActivity;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.camera.core.Camera;
+import androidx.camera.core.CameraControl;
+import androidx.camera.core.CameraSelector;
+import androidx.camera.core.FocusMeteringAction;
+import androidx.camera.core.ImageCapture;
+import androidx.camera.core.ImageCaptureException;
+import androidx.camera.core.MeteringPoint;
+import androidx.camera.core.MeteringPointFactory;
+import androidx.camera.core.Preview;
+import androidx.camera.core.SurfaceOrientedMeteringPointFactory;
+import androidx.camera.lifecycle.ProcessCameraProvider;
+import androidx.camera.view.PreviewView;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
 import android.os.Bundle;
+import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 ;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.lzm.player.TimeInfo;
 import com.lzm.player.listener.MOnErrorListener;
 import com.lzm.player.listener.MOnLoadListener;
@@ -17,18 +42,40 @@ import com.lzm.player.myplayer.*;
 import com.lzm.player.log.mylog;
 import com.lzm.player.util.MTimeUtil;
 
+import java.io.File;
+import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
+
 public class MainActivity extends AppCompatActivity {
 
 
 
     private Mplayer mplayer;
     private TextView tvTime;
+    private PreviewView mviewfinder;
+    private ImageCapture mImageCapture;
+    private int mFacingCam = CameraSelector.LENS_FACING_BACK;//默认打开后摄
+    private int REQUEST_CODE_PERMISSIONS = 10; //arbitrary number, can be changed accordingly
+    private final String[] REQUIRED_PERMISSIONS = new String[]{"android.permission.CAMERA",
+            "android.permission.WRITE_EXTERNAL_STORAGE",
+            "android.permission.WRITE_USER_DICTIONARY"};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         tvTime = findViewById(R.id.tv_time);
+
+        mviewfinder = findViewById(R.id.viewFinder);
+
+        //监听布局变化
+        mviewfinder.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
+            @Override
+            public void onLayoutChange(View view, int i, int i1, int i2, int i3, int i4, int i5, int i6, int i7) {
+                updateTransform();
+            }
+        });
+
         mplayer = new Mplayer();
         mplayer.setmOnPreparedListener(new MOnPreparedListener() {
             @Override
@@ -119,5 +166,164 @@ public class MainActivity extends AppCompatActivity {
 
     public void next(View view) {
         mplayer.playNext("/sdcard/netease/cloudmusic/Music/蔡健雅 - 红色高跟鞋.mp3");
+    }
+
+
+    public void startCap(View view){
+        if(allPermissionGranted()){
+            startCamera();
+
+        }else{
+            ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS);
+            Toast.makeText(this,"error permission",Toast.LENGTH_SHORT).show();
+        }
+    }
+    //开启摄像头
+    public void startCamera(){
+        final ListenableFuture<ProcessCameraProvider> cameraProviderFuture = ProcessCameraProvider.getInstance(this);
+        cameraProviderFuture.addListener(new Runnable() {
+            @SuppressLint({"RestrictedApi", "ClickableViewAccessibility"})
+            @Override
+            public void run() {
+                try{
+
+                    //将相机生命周期与活动的生命周期绑定，camerax自己释放
+                    ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
+
+                    //预览的capture，支持角度换算
+                    Preview preview = new Preview.Builder().build();
+
+                    //创建图像的capture
+                    mImageCapture = new ImageCapture.Builder()
+                            .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
+                            .setFlashMode(ImageCapture.FLASH_MODE_AUTO)
+                            .build();
+
+                    //选择后置摄像头
+                    CameraSelector cameraSelector = new CameraSelector.Builder().requireLensFacing(mFacingCam).build();
+                    //释放可能存在的预览
+                    cameraProvider.unbindAll();
+                    //将数据绑定到相机的生命周期中
+                    Camera camera = cameraProvider.bindToLifecycle(MainActivity.this,cameraSelector,preview,mImageCapture);
+                    //控制对焦
+                    final CameraControl cameraControl = camera.getCameraControl();
+
+                    mviewfinder.setOnTouchListener(new View.OnTouchListener() {
+                        @Override
+                        public boolean onTouch(View view, MotionEvent motionEvent) {
+
+                            Executor executor = null;
+
+                            MeteringPointFactory factory = new SurfaceOrientedMeteringPointFactory(mviewfinder.getWidth(),mviewfinder.getHeight());
+                            Log.d("touchlocation:", String.valueOf(motionEvent.getX()));
+                            MeteringPoint point  =factory.createPoint(motionEvent.getX(),
+                                    motionEvent.getY());
+
+                            FocusMeteringAction action = new FocusMeteringAction.Builder(point,FocusMeteringAction.FLAG_AF)
+                                    .setAutoCancelDuration(1, TimeUnit.SECONDS)
+                                    .build();
+                            ListenableFuture future =cameraControl.startFocusAndMetering(action);
+
+                            /*future.addListener(()->{
+                                try {
+                                    FocusMeteringResult result = (FocusMeteringResult) future.get();
+                                    if(result.isFocusSuccessful()){
+                                        Log.d("success focus", String.valueOf(result.isFocusSuccessful()));
+                                    }
+                                }catch (Exception e){
+
+                                }
+                            }, executor);*/
+
+                            return false;
+                        }
+                    });
+
+
+
+                    //将预览的surface给相机预览
+                    preview.setSurfaceProvider(mviewfinder.createSurfaceProvider());
+
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+
+            }
+        }, ContextCompat.getMainExecutor(this));
+    }
+
+    //更新布局
+    private void updateTransform(){
+
+    }
+
+    public void takePhoto(View view){
+        if(mImageCapture!=null){
+            //create folder
+            /*File dir = new File(getExternalCacheDir()"/camlzmx");
+            if(!dir.exists()){
+                dir.mkdirs();
+            }*/
+            //create files
+            final File file = new File(getExternalCacheDir()+"/lzm"+System.currentTimeMillis()+".jpg");
+            Log.d("Main",getExternalCacheDir()+"/lzm"+System.currentTimeMillis()+".jpg");
+            if(file.exists()){
+                file.delete();
+            }
+
+            //create pkg data
+            ImageCapture.OutputFileOptions outputFileOptions = new ImageCapture.OutputFileOptions.Builder(file).build();
+            //take photo
+            mImageCapture.takePicture(outputFileOptions,
+                    ContextCompat.getMainExecutor(this),
+                    new ImageCapture.OnImageSavedCallback(){
+                        @Override
+                        public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
+                            //回调信息
+                            Toast.makeText(MainActivity.this,"save success in"+file.getAbsolutePath(),
+                                    Toast.LENGTH_SHORT).show();
+                        }
+
+                        @Override
+                        public void onError(@NonNull ImageCaptureException exception) {
+                            //出错回调
+                            Toast.makeText(MainActivity.this,"save failed",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    });
+        }
+    }
+
+    public void switchCamera(View view){
+        mFacingCam = mFacingCam==CameraSelector.LENS_FACING_FRONT ?
+                CameraSelector.LENS_FACING_BACK : CameraSelector.LENS_FACING_FRONT;
+        startCamera();
+    }
+
+
+    //申请权限的回调
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        //start camera when permissions have been granted otherwise exit app
+        if(requestCode == REQUEST_CODE_PERMISSIONS){
+            if(allPermissionGranted()){
+                startCamera();
+            } else{
+                Toast.makeText(this, "Permissions not granted by the user.", Toast.LENGTH_SHORT).show();
+                finish();
+            }
+        }
+    }
+
+    //向用户申请权限
+    public boolean allPermissionGranted() {
+
+        for (String permission : REQUIRED_PERMISSIONS) {
+            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
