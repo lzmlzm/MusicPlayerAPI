@@ -50,6 +50,8 @@ public:
     //pcm
     SLObjectItf  pcmplayer = NULL;
     SLPlayItf slPlayItf = NULL;
+
+    //PCM缓冲区
     SLAndroidSimpleBufferQueueItf pcmBufferQueue = NULL;
 
 

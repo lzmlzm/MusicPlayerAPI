@@ -1,9 +1,9 @@
-set(CMAKE_HOST_SYSTEM "Linux-5.4.0-42-generic")
-set(CMAKE_HOST_SYSTEM_NAME "Linux")
-set(CMAKE_HOST_SYSTEM_VERSION "5.4.0-42-generic")
-set(CMAKE_HOST_SYSTEM_PROCESSOR "x86_64")
+set(CMAKE_HOST_SYSTEM "Windows-10.0.18363")
+set(CMAKE_HOST_SYSTEM_NAME "Windows")
+set(CMAKE_HOST_SYSTEM_VERSION "10.0.18363")
+set(CMAKE_HOST_SYSTEM_PROCESSOR "AMD64")
 
-include("/home/lzm/下载/android-ndk-r21b-linux-x86_64/android-ndk-r21b/build/cmake/android.toolchain.cmake")
+include("C:/Users/nxf65025/AppData/Local/Android/Sdk/ndk/21.0.6113669/build/cmake/android.toolchain.cmake")
 
 set(CMAKE_SYSTEM "Android-1")
 set(CMAKE_SYSTEM_NAME "Android")

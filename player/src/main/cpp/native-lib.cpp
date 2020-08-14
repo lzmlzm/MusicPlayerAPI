@@ -24,7 +24,7 @@ MCallJava *callJava = NULL;
 MFFmpeg *mfFmpeg = NULL;
 MPlaystatus *mPlaystatus = NULL;
 
-bool nexit = true;
+bool next = true;
 
 extern "C"
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved)
@@ -41,8 +41,6 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved)
 }
 
 
-
-
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_lzm_player_myplayer_Mplayer_n_1prepared(JNIEnv *env, jobject instance, jstring source_) {
@@ -56,8 +54,8 @@ Java_com_lzm_player_myplayer_Mplayer_n_1prepared(JNIEnv *env, jobject instance, 
         }
         callJava->onCallLoad(MAIN_THREAD,true);
         mPlaystatus = new MPlaystatus();
-        mfFmpeg = new MFFmpeg(mPlaystatus,callJava,source);//解析URL
-        mfFmpeg->prepared();
+        mfFmpeg = new MFFmpeg(mPlaystatus,callJava,source);
+        mfFmpeg->prepared();//解析URL音频数据
     }
 
 
@@ -68,6 +66,7 @@ Java_com_lzm_player_myplayer_Mplayer_n_1start(JNIEnv *env, jobject instance) {
 
     if(mfFmpeg != NULL)
     {
+        //ffmpeg开始解码
         mfFmpeg->start();
     }
 
@@ -92,15 +91,16 @@ Java_com_lzm_player_myplayer_Mplayer_n_1reusme(JNIEnv *env, jobject instance) {
 JNIEXPORT void JNICALL
 Java_com_lzm_player_myplayer_Mplayer_n_1stop(JNIEnv *env, jobject instance) {
 
-    if(!nexit)
+    if(!next)
     {
         return;
     }
-
+    //Call next方法
     jclass jlz = env->GetObjectClass(instance);
     jmethodID jmid_next = env->GetMethodID(jlz,"onCallNext","()V");//获取JAVA方法
 
-    nexit = false;
+    next = false;
+    //释放
     if(mfFmpeg != NULL)
     {
         mfFmpeg->release();
@@ -117,8 +117,10 @@ Java_com_lzm_player_myplayer_Mplayer_n_1stop(JNIEnv *env, jobject instance) {
             mPlaystatus = NULL;
         }
     }
-    nexit = true;
-    env->CallVoidMethod(instance,jmid_next);//回调下一个播放
+    next = true;
+
+    env->CallVoidMethod(instance,jmid_next);//回调播放下一个
+
 }extern "C"
 JNIEXPORT void JNICALL
 Java_com_lzm_player_myplayer_Mplayer_n_1seek(JNIEnv *env, jobject instance, jint secs) {
@@ -128,4 +130,13 @@ Java_com_lzm_player_myplayer_Mplayer_n_1seek(JNIEnv *env, jobject instance, jint
         mfFmpeg->seek(secs);
     }
 
+}extern "C"
+JNIEXPORT jint JNICALL
+Java_com_lzm_player_myplayer_Mplayer_n_1duration(JNIEnv *env, jobject thiz) {
+    if(mfFmpeg != NULL)
+    {
+        LOGD("FFMPEG->duration is %d", mfFmpeg->duration);
+        return mfFmpeg->duration;
+    }
+    return 0;
 }

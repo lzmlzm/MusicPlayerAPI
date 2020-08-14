@@ -28,30 +28,47 @@ public class Mplayer {
     }
 
     private static String source;
+    private static int duration = -1;
     private static boolean playNext = false;
 
-    private MOnPreparedListener mOnPreparedListener;//引入接口
-    private MOnLoadListener mOnLoadListener;
-    private MOnPauseResumeListener mOnPauseResumeListener;
-    private MOnTimeInfoListener mOnTimeInfoListener;
+    private MOnPreparedListener mOnPreparedListener;//准备接口
+    private MOnLoadListener mOnLoadListener;//加载接口
+    private MOnPauseResumeListener mOnPauseResumeListener;//暂停恢复接口
+    private MOnTimeInfoListener mOnTimeInfoListener;//时间信息接口
     private TimeInfo mtimeInfo;
-    private MOnErrorListener mOnErrorListener;
+    private MOnErrorListener mOnErrorListener; //出错接口
 
+    //解码音频
+    private native void n_prepared(String source);
+
+    private native void n_start();
+
+    private native void n_pause();
+
+    private native void n_reusme();
+
+    private native void n_stop();
+
+    private native void n_seek(int secs);
+
+    private native int n_duration();
 
     public  Mplayer(){}
 
+    //实现播放
     public void prepared() {
-
+        //判断链接是否为空
         if (TextUtils.isEmpty(source)) {
             mylog.d("source not be empty");
             return;
         }
+        //回调
         onCallLoad(true);
-        //判断链接是否为空，否则就开一个线程
+
         new Thread(new Runnable() {
             @Override
             public void run() {
-                n_prepared(source);
+                n_prepared(source);//启动C++层的播放
             }
         }).start();
     }
@@ -87,6 +104,8 @@ public class Mplayer {
 
     public void stop()
     {
+        mtimeInfo = null;
+        duration = -1;//停止的时候还原值
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -103,24 +122,33 @@ public class Mplayer {
         this.source = source;
     }
 
+    //获取播放时长
+    public  int getDuaration()
+    {
+        if(duration < 0)
+        {
+            duration = n_duration();
+        }
+        return duration;
+    }
+
     public void playNext(String url)
     {
         source = url;
         playNext = true;
         stop();
     }
-
-    //设置接口
-    public void setmOnPreparedListener(MOnPreparedListener mOnPreparedListener) {
-        this.mOnPreparedListener = mOnPreparedListener;
-    }
-
     public void onCallPrepared()
     {
         if (mOnPreparedListener != null)
         {
             mOnPreparedListener.onPrepared();
         }
+    }
+
+    //设置回调接口
+    public void setmOnPreparedListener(MOnPreparedListener mOnPreparedListener) {
+        this.mOnPreparedListener = mOnPreparedListener;
     }
 
     public void setmOnLoadListener(MOnLoadListener mOnLoadListener) {
@@ -135,16 +163,17 @@ public class Mplayer {
         this.mOnErrorListener = mOnErrorListener;
     }
 
+    public void setmOnTimeInfoListener(MOnTimeInfoListener mOnTimeInfoListener) {
+        this.mOnTimeInfoListener = mOnTimeInfoListener;
+    }
+    //回调函数，此函数会在C++调用JAVA使用，并在C++层回传load参数
     public void onCallLoad(boolean load) {
         if (mOnPreparedListener != null) {
             mOnLoadListener.onLoad(load);
         }
     }
-
-    public void setmOnTimeInfoListener(MOnTimeInfoListener mOnTimeInfoListener) {
-        this.mOnTimeInfoListener = mOnTimeInfoListener;
-    }
-
+    //C++层调用此JAVA函数并回传time信息，然后此JAVA函数调用接口，
+    // main函数里覆写接口函数onTimeInfo获得接口的数据
     public void onCallTimeInfo(int currentTime, int totalTime) {
         if (mOnTimeInfoListener != null) {
             if (mtimeInfo == null) {
@@ -157,18 +186,15 @@ public class Mplayer {
         }
     }
 
-
     public void onCallError(int code,String msg)
     {
-
         stop();
         if (mOnErrorListener != null){
             mOnErrorListener.OnError(code,msg);
         }
-
     }
 
-
+    //切换下一个播放源
     public void onCallNext()
     {
         if(playNext)
@@ -177,19 +203,5 @@ public class Mplayer {
             prepared();
         }
     }
-
-
-    private native void n_prepared(String source);
-
-    private native void n_start();
-
-    private native void n_pause();
-
-    private native void n_reusme();
-
-    private native void n_stop();
-
-    private native void n_seek(int secs);
-
 
 }

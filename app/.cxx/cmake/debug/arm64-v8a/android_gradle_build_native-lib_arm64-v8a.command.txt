@@ -1,7 +1,7 @@
-Executable : /home/lzm/Android/Sdk/cmake/3.10.2.4988404/bin/ninja
+Executable : C:\Users\nxf65025\AppData\Local\Android\Sdk\cmake\3.10.2.4988404\bin\ninja.exe
 arguments : 
 -C
-/media/lzm/T5/VideoApp/app/.cxx/cmake/debug/arm64-v8a
+C:\Users\nxf65025\AndroidStudioProjects\VideoAPP\app\.cxx\cmake\debug\arm64-v8a
 native-lib
 jvmArgs : 
 

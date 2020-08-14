@@ -3,6 +3,7 @@ package com.lzm.music;
 import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 
@@ -23,14 +24,13 @@ import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
-;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.lzm.player.TimeInfo;
 import com.lzm.player.listener.MOnErrorListener;
@@ -48,8 +48,6 @@ import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
 
-
-
     private Mplayer mplayer;
     private TextView tvTime;
     private PreviewView mviewfinder;
@@ -60,14 +58,19 @@ public class MainActivity extends AppCompatActivity {
             "android.permission.WRITE_EXTERNAL_STORAGE",
             "android.permission.WRITE_USER_DICTIONARY"};
 
+    private SeekBar seekBar;
+    private int position = 0;//seek位置
+    private  boolean isJumpseektime = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        //找到时间轴的布局
         tvTime = findViewById(R.id.tv_time);
-
+        //找到相机view的布局
         mviewfinder = findViewById(R.id.viewFinder);
-
+        seekBar = findViewById(R.id.seekbar_seek);
         //监听布局变化
         mviewfinder.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
             @Override
@@ -77,13 +80,17 @@ public class MainActivity extends AppCompatActivity {
         });
 
         mplayer = new Mplayer();
+
+        //监听接口回调，获取C++层回调给JAVA函数的数据
         mplayer.setmOnPreparedListener(new MOnPreparedListener() {
             @Override
             public void onPrepared() {
                 mylog.d("onPrepared");
+                //ffmpeg开始解码
                 mplayer.start();
             }
         });
+        //监听接口回调，获取C++层回调给JAVA函数的数据
         mplayer.setmOnLoadListener(new MOnLoadListener() {
             @Override
             public void onLoad(boolean load) {
@@ -94,7 +101,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
-
+        //监听接口回调，获取C++层回调给JAVA函数的数据
         mplayer.setmOnPauseResumeListener(new MOnPauseResumeListener() {
             @Override
             public void onPause(boolean pause) {
@@ -107,6 +114,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        //监听接口获得C++回调的播放时间信息并在JAVA层显示
         mplayer.setmOnTimeInfoListener(new MOnTimeInfoListener() {
             @Override
             public void onTimeInfo(TimeInfo timeInfo) {
@@ -117,22 +125,53 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        //监听接口C++回调给java的信息
         mplayer.setmOnErrorListener(new MOnErrorListener() {
             @Override
             public void OnError(int code, String msg) {
                 mylog.d("code:"+code+",msg"+msg);
             }
         });
+
+        //seek回调
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+                //进度条滚动时也会调用此方法，因此必须严格限制仅在手动拖动时才有效
+                //bug：后台在播放，但是seekbar出错
+                //duration =-1 时 debug时seekbar会卡住，但正常运行OK
+                if(mplayer.getDuaration()>0 && isJumpseektime){
+                    //总时长*百分比
+                    position = mplayer.getDuaration()* i /100;
+                }
+
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                //滑动的时候要时间跳转
+                isJumpseektime=true;
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                //滑动结束后seek
+                mplayer.seek(position);
+                isJumpseektime=false;
+            }
+        });
     }
-
-
 
 
     public void prepared(View view) {
 
     }
+    //开始播放按下
+    @RequiresApi(api = Build.VERSION_CODES.R)
     public void begin(View view) {
-        mplayer.setSource("/sdcard/netease/cloudmusic/Music/TheFatRat - Unity.m4a");
+
+        mplayer.setSource("http://music.163.com/song/media/outer/url?id=281951.mp3");
+        //准备数据并投喂给队列
         mplayer.prepared();
     }
 
@@ -144,14 +183,21 @@ public class MainActivity extends AppCompatActivity {
         mplayer.resume();
     }
 
+    @SuppressLint("HandlerLeak")
     Handler handler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
+            //没有滑动时打印播放时间
+
             super.handleMessage(msg);
             if (msg.what == 1) {
-                TimeInfo timeInfo = (TimeInfo) msg.obj;
-                tvTime.setText(MTimeUtil.secdsToDateFormat(timeInfo.getTotalTime(), timeInfo.getTotalTime())
-                        + "/" + MTimeUtil.secdsToDateFormat(timeInfo.getCurrentTime(), timeInfo.getTotalTime()));
+                if(!isJumpseektime){
+                    TimeInfo timeInfo = (TimeInfo) msg.obj;
+                    tvTime.setText(MTimeUtil.secdsToDateFormat(timeInfo.getTotalTime(), timeInfo.getTotalTime())
+                            + "/" + MTimeUtil.secdsToDateFormat(timeInfo.getCurrentTime(), timeInfo.getTotalTime()));
+                    //当前进度*100/总时间
+                    seekBar.setProgress(timeInfo.getCurrentTime()*100/timeInfo.getTotalTime());
+                }
             }
         }
     };
@@ -159,16 +205,19 @@ public class MainActivity extends AppCompatActivity {
     public void stop(View view) {
         mplayer.stop();
     }
-
+    //需要改进seek方法
     public void seek(View view) {
         mplayer.seek(200);
     }
 
+    //播放下一个
     public void next(View view) {
         mplayer.playNext("/sdcard/netease/cloudmusic/Music/蔡健雅 - 红色高跟鞋.mp3");
     }
 
 
+
+    //获取权限并开启摄像头
     public void startCap(View view){
         if(allPermissionGranted()){
             startCamera();
@@ -299,7 +348,6 @@ public class MainActivity extends AppCompatActivity {
                 CameraSelector.LENS_FACING_BACK : CameraSelector.LENS_FACING_FRONT;
         startCamera();
     }
-
 
     //申请权限的回调
     @Override

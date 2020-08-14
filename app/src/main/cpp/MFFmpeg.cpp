@@ -42,11 +42,11 @@ void MFFmpeg::decodeFFmpegThread() {
     //解码线程！
 
     //1.注册管理器
-    av_register_all();
+    //av_register_all();
 
     //2.网络初始化
 
-    avformat_network_init();
+    //avformat_network_init();
 
     pFormatCtx = avformat_alloc_context();
 
@@ -92,7 +92,7 @@ void MFFmpeg::decodeFFmpegThread() {
                 audio->duration = pFormatCtx->duration / AV_TIME_BASE;//计算时间
                 audio->time_base = pFormatCtx->streams[i]->time_base;
                 duration = audio->duration;
-
+                LOGD("current duration is %d",duration);
             }
         }
 

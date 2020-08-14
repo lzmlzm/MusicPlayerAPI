@@ -9,7 +9,5 @@ package com.lzm.player.listener;
  * qq邮箱：1198492751@qq.com
  */
 public interface MOnPreparedListener {
-
-
     void onPrepared();
 }
