@@ -7,6 +7,8 @@ import com.lzm.player.listener.MOnPauseResumeListener;
 import com.lzm.player.listener.MOnPreparedListener;
 import com.lzm.player.listener.MOnTimeInfoListener;
 import com.lzm.player.log.mylog;
+import com.lzm.player.muteenum.MuteEnum;
+
 import android.text.TextUtils;
 
 /**
@@ -30,6 +32,7 @@ public class Mplayer {
     private static String source;
     private static int duration = -1;
     private static boolean playNext = false;
+    int defaultvolume = 60;
 
     private MOnPreparedListener mOnPreparedListener;//准备接口
     private MOnLoadListener mOnLoadListener;//加载接口
@@ -38,20 +41,9 @@ public class Mplayer {
     private TimeInfo mtimeInfo;
     private MOnErrorListener mOnErrorListener; //出错接口
 
-    //解码音频
-    private native void n_prepared(String source);
 
-    private native void n_start();
 
-    private native void n_pause();
 
-    private native void n_reusme();
-
-    private native void n_stop();
-
-    private native void n_seek(int secs);
-
-    private native int n_duration();
 
     public  Mplayer(){}
 
@@ -117,6 +109,27 @@ public class Mplayer {
     public void seek(int secs)
     {
         n_seek(secs);
+    }
+
+    public void setVolume(int percent)
+    {
+        //音量数值在0-100之间
+        defaultvolume=percent;
+        if(percent>=0 && percent<=100){
+            n_volume(percent);
+        }
+    }
+    //获取当前音量
+    public int getCurrentVolume()
+    {
+        return  defaultvolume;
+    }
+
+    //设置声道,枚举传入
+    public void setMute(MuteEnum muteEnum)
+    {
+        //获取枚举里的值
+        n_mute(muteEnum.getValue());
     }
     public void setSource(String source) {
         this.source = source;
@@ -204,4 +217,23 @@ public class Mplayer {
         }
     }
 
+
+    //解码音频
+    private native void n_prepared(String source);
+
+    private native void n_start();
+
+    private native void n_pause();
+
+    private native void n_reusme();
+
+    private native void n_stop();
+
+    private native void n_seek(int secs);
+
+    private native int n_duration();
+
+    private native void n_volume(int percent);
+
+    private native void n_mute(int mute);
 }

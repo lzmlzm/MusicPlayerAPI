@@ -10,7 +10,6 @@ MQueue::MQueue(MPlaystatus *mPlaystatus) {
     pthread_mutex_init(&mutexPacket,NULL);
     pthread_cond_init(&condPacket,NULL);
 
-
 }
 
 MQueue::~MQueue() {
@@ -21,7 +20,7 @@ MQueue::~MQueue() {
 }
 
 int MQueue::putAvpacket(AVPacket *avPacket) {
-    //入队操作
+    //音视频数据包入队操作
     pthread_mutex_lock(&mutexPacket);
     queuePacket.push(avPacket);
     if(LOG_DEBUG)
@@ -35,7 +34,7 @@ int MQueue::putAvpacket(AVPacket *avPacket) {
 }
 
 int MQueue::outAvpacket(AVPacket *avPacket) {
-    //出队操作
+    //音视频数据出队操作
     pthread_mutex_lock(&mutexPacket);
     while(playstatus != NULL && !playstatus->exit)
     {
@@ -73,6 +72,7 @@ int MQueue::getQueueSIze() {
     size = queuePacket.size();
     pthread_mutex_unlock(&mutexPacket);
     return size;
+
 }
 
 void MQueue::clearAvpacket() {

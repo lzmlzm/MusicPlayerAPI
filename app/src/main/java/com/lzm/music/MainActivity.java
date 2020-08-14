@@ -38,7 +38,8 @@ import com.lzm.player.listener.MOnLoadListener;
 import com.lzm.player.listener.MOnPauseResumeListener;
 import com.lzm.player.listener.MOnPreparedListener;
 import com.lzm.player.listener.MOnTimeInfoListener;
-import com.lzm.player.myplayer.*;
+import com.lzm.player.muteenum.MuteEnum;
+import com.lzm.player.myplayer.Mplayer;
 import com.lzm.player.log.mylog;
 import com.lzm.player.util.MTimeUtil;
 
@@ -59,18 +60,27 @@ public class MainActivity extends AppCompatActivity {
             "android.permission.WRITE_USER_DICTIONARY"};
 
     private SeekBar seekBar;
+    private SeekBar volume_seekBar;
     private int position = 0;//seek位置
     private  boolean isJumpseektime = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mplayer = new Mplayer();
         setContentView(R.layout.activity_main);
         //找到时间轴的布局
         tvTime = findViewById(R.id.tv_time);
         //找到相机view的布局
-        mviewfinder = findViewById(R.id.viewFinder);
+        //mviewfinder = findViewById(R.id.viewFinder);
+
         seekBar = findViewById(R.id.seekbar_seek);
+        volume_seekBar = findViewById(R.id.volume_bar);
+        mviewfinder = findViewById(R.id.viewFinder);
+
+        mplayer.setVolume(50);//默认音量
+        //mplayer.setMute(MuteEnum.MUTE_THREED);//默认立体声
+
         //监听布局变化
         mviewfinder.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
             @Override
@@ -79,7 +89,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        mplayer = new Mplayer();
+
 
         //监听接口回调，获取C++层回调给JAVA函数的数据
         mplayer.setmOnPreparedListener(new MOnPreparedListener() {
@@ -133,7 +143,25 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        //seek回调
+        //音量seek
+        volume_seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+                mplayer.setVolume(i);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+
+        //播放seek
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
@@ -167,7 +195,6 @@ public class MainActivity extends AppCompatActivity {
 
     }
     //开始播放按下
-    @RequiresApi(api = Build.VERSION_CODES.R)
     public void begin(View view) {
 
         mplayer.setSource("http://music.163.com/song/media/outer/url?id=281951.mp3");
@@ -373,5 +400,18 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return true;
+    }
+
+    //左右声道切换
+    public void turnleft(View view) {
+        mplayer.setMute(MuteEnum.MUTE_LEFT);
+    }
+
+    public void turnright(View view) {
+        mplayer.setMute(MuteEnum.MUTE_RIGHT);
+    }
+
+    public void threed(View view) {
+        mplayer.setMute(MuteEnum.MUTE_THREED);
     }
 }

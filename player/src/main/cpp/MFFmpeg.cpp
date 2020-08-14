@@ -345,3 +345,24 @@ void MFFmpeg::seek(int64_t secs) {
     }
 
 }
+
+//包装底层SL的音量设置函数
+void MFFmpeg::setVolume(int percent) {
+    if(audio!=NULL)
+    {
+        //设置音量
+        audio->setVolume(percent);
+    }
+
+}
+
+void MFFmpeg::setMute(int mute) {
+    if(audio!=NULL)
+    {
+        //设置声道
+        LOGD("FFMPEG 收到")
+        audio->setMute(mute);
+
+    }
+
+}

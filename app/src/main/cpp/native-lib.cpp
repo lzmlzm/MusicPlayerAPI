@@ -135,7 +135,21 @@ JNIEXPORT jint JNICALL
 Java_com_lzm_player_myplayer_Mplayer_n_1duration(JNIEnv *env, jobject thiz) {
     if(mfFmpeg != NULL)
     {
+        LOGD("FFMPEG->duration is %d", mfFmpeg->duration);
         return mfFmpeg->duration;
     }
     return 0;
+}extern "C"
+JNIEXPORT void JNICALL
+Java_com_lzm_player_myplayer_Mplayer_n_1volume(JNIEnv *env, jobject thiz, jint percent) {
+    if (mfFmpeg != NULL) {
+        mfFmpeg->setVolume(percent);
+    }
+}extern "C"
+JNIEXPORT void JNICALL
+Java_com_lzm_player_myplayer_Mplayer_n_1mute(JNIEnv *env, jobject thiz, jint mute) {
+    if (mfFmpeg != NULL) {
+        LOGD("----------------------------------------------------->NATIVE MUTE")
+        mfFmpeg->setMute(mute);
+    }
 }

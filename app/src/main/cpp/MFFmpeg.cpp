@@ -15,14 +15,17 @@ MFFmpeg::MFFmpeg(MPlaystatus *mPlaystatus,MCallJava *callJava, const char *url) 
 
 }
 
+//ffmpeg解码函数
 void *decodeFFmpeg(void *data)
 {
     MFFmpeg *mfFmpeg = (MFFmpeg *)data;//数据强制转换
     mfFmpeg->decodeFFmpegThread();
     pthread_exit(&mfFmpeg->decodeThread);
 }
+
 void MFFmpeg::prepared() {
-    pthread_create(&decodeThread,NULL,decodeFFmpeg,this);//创建数据解析线程
+    //创建数据解析线程
+    pthread_create(&decodeThread,NULL,decodeFFmpeg,this);
 
 }
 
@@ -37,16 +40,12 @@ int avformat_callback(void *ctx)
 
 }
 
+//ffmpeg解码线程准备函数
 void MFFmpeg::decodeFFmpegThread() {
     pthread_mutex_lock(&init_mutex);
-    //解码线程！
-
-    //1.注册管理器
-    //av_register_all();
 
     //2.网络初始化
-
-    //avformat_network_init();
+    avformat_network_init();
 
     pFormatCtx = avformat_alloc_context();
 
@@ -58,6 +57,7 @@ void MFFmpeg::decodeFFmpegThread() {
         if(LOG_DEBUG)
         {
             LOGE("CAN NOT OPEN URL:%s", url);
+            //回调java
             callJava->onCallError(CHILD_THREAD,1001,"CAN NOT OPEN URL");
         }
         exit = true;
@@ -85,6 +85,7 @@ void MFFmpeg::decodeFFmpegThread() {
         {
             if(audio == NULL)
             {
+                //设置OpenSL ES
                 audio = new MAudio(mPlaystatus, pFormatCtx->streams[i]->codecpar->sample_rate,
                                    callJava);
                 audio->streamIndex = i;
@@ -92,10 +93,9 @@ void MFFmpeg::decodeFFmpegThread() {
                 audio->duration = pFormatCtx->duration / AV_TIME_BASE;//计算时间
                 audio->time_base = pFormatCtx->streams[i]->time_base;
                 duration = audio->duration;
-                LOGD("current duration is %d",duration);
+
             }
         }
-
     }
 
     //找到解码器
@@ -138,6 +138,7 @@ void MFFmpeg::decodeFFmpegThread() {
         pthread_mutex_unlock(&init_mutex);
         return;
     }
+    //打开解码器上下文
     if(avcodec_open2(audio->avCodecCtx,avCodec,0) != 0)
     {
         if(LOG_DEBUG)
@@ -153,9 +154,10 @@ void MFFmpeg::decodeFFmpegThread() {
     callJava->onCallPrepared(CHILD_THREAD);
     pthread_mutex_unlock(&init_mutex);
 
-
 }
 
+
+//开始处理数据
 void MFFmpeg::start() {
     if(audio == NULL)
     {
@@ -166,9 +168,14 @@ void MFFmpeg::start() {
         }
         return;
     }
+    //
+    //开始从队列接收数据并播放
+    //
     audio->play();
 
     int count;
+
+    //检测播放状态
     while(mPlaystatus !=NULL && !mPlaystatus->exit)
     {
         if(mPlaystatus->seek)
@@ -178,19 +185,20 @@ void MFFmpeg::start() {
 
         if(audio->queue->getQueueSIze() > 40)
         {
-            continue;//存40帧
+            continue;//存40帧再处理数据
         }
-
+        //一个avpacket为一帧的数据包
         AVPacket *avPacket = av_packet_alloc();
 
         pthread_mutex_lock(&seek_mutex);
 
+        //能否读到帧数据
         int ret = av_read_frame(pFormatCtx,avPacket);
 
         pthread_mutex_unlock(&seek_mutex);
 
         if(ret == 0)
-        {
+        {   //读到有效帧数据
             if(avPacket->stream_index == audio->streamIndex)
             {
                 count++;
@@ -198,6 +206,7 @@ void MFFmpeg::start() {
                 {
                     LOGE("DECODE %d FRAME", count);
                 }
+                //将avpacket音频数据放入队列
                 audio->queue->putAvpacket(avPacket);
             } else{
                 av_packet_free(&avPacket);
@@ -205,6 +214,7 @@ void MFFmpeg::start() {
                 avPacket = NULL;
             }
         }else{
+            //读不到有效帧数据，释放资源并推出播放
             av_packet_free(&avPacket);
             av_free(avPacket);
             avPacket = NULL;
@@ -222,7 +232,7 @@ void MFFmpeg::start() {
     }
 
     exit = true;
-
+    //？？？待注释
     while(audio->queue->getQueueSIze() > 0) {
         AVPacket *avPacket = av_packet_alloc();
         audio->queue->outAvpacket(avPacket);
@@ -308,6 +318,7 @@ MFFmpeg::~MFFmpeg() {
     pthread_mutex_destroy(&init_mutex);
 }
 
+//回溯功能
 void MFFmpeg::seek(int64_t secs) {
 
     if(duration<=0)
@@ -331,6 +342,27 @@ void MFFmpeg::seek(int64_t secs) {
             mPlaystatus->seek = false;
 
         }
+    }
+
+}
+
+//包装底层SL的音量设置函数
+void MFFmpeg::setVolume(int percent) {
+    if(audio!=NULL)
+    {
+        //设置音量
+        audio->setVolume(percent);
+    }
+
+}
+
+void MFFmpeg::setMute(int mute) {
+    if(audio!=NULL)
+    {
+        //设置声道
+        LOGD("FFMPEG 收到")
+        audio->setMute(mute);
+
     }
 
 }

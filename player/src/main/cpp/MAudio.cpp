@@ -243,19 +243,26 @@ void MAudio::initOpenSLES() {
 
     SLDataSink audioSink = {&outputMix,NULL,};
 
-    const SLInterfaceID ids[1]={SL_IID_BUFFERQUEUE};
+    //必须加上SL_IID_VOLUME ID否则无法控制音量
+    const SLInterfaceID ids[3]={SL_IID_BUFFERQUEUE,SL_IID_VOLUME,SL_IID_MUTESOLO};
 
-    const SLboolean req[1] = {SL_BOOLEAN_TRUE};
+    const SLboolean req[3] = {SL_BOOLEAN_TRUE,SL_BOOLEAN_TRUE,SL_BOOLEAN_TRUE};
 
-    (*engineEngine)->CreateAudioPlayer(engineEngine,&pcmplayer,&slDataSource, &audioSink,1,ids,req);
+    (*engineEngine)->CreateAudioPlayer(engineEngine,&pcmplayer,&slDataSource, &audioSink,3,ids,req);
 
     (*pcmplayer)->Realize(pcmplayer,SL_BOOLEAN_FALSE);
 
     (*pcmplayer)->GetInterface(pcmplayer,SL_IID_PLAY,&slPlayItf);
 
+    //获取音量控制接口
+    (*pcmplayer)->GetInterface(pcmplayer,SL_IID_VOLUME,&slVolumeItf);
+    //获取声道控制接口
+    (*pcmplayer)->GetInterface(pcmplayer,SL_IID_MUTESOLO,&slMuteSoloItf);
+
     //5.设置缓冲区和回调函数
     (*pcmplayer)->GetInterface(pcmplayer,SL_IID_BUFFERQUEUE,&pcmBufferQueue);
-
+    //设置默认音量
+    setVolume(defaultvolume);
     //pcmBufferCallBack将实际的PCM数据放入pcmBufferQueue
     (*pcmBufferQueue)->RegisterCallback(pcmBufferQueue,pcmBufferCallBack,this);
 
@@ -384,5 +391,68 @@ void MAudio::release() {
     {
         callJava = NULL;
     }
+}
+
+void MAudio::setVolume(int percent) {
+    if(slVolumeItf!=NULL)
+    {   //音量分段处理使得音量大小过渡流畅
+
+        //需要回传当前音量给JAVA，在界面上显示。
+        defaultvolume = percent;
+        //传入pcm播放器引擎对象
+        if(percent >30)
+        {
+            (*slVolumeItf)->SetVolumeLevel(slVolumeItf, (100-percent)*-20);
+        }else if(percent >25)
+        {
+            (*slVolumeItf)->SetVolumeLevel(slVolumeItf, (100-percent)*-22);
+        }else if(percent >20)
+        {
+            (*slVolumeItf)->SetVolumeLevel(slVolumeItf, (100-percent)*-25);
+        }else if(percent >15)
+        {
+            (*slVolumeItf)->SetVolumeLevel(slVolumeItf, (100-percent)*-28);
+        }else if(percent >10)
+        {
+            (*slVolumeItf)->SetVolumeLevel(slVolumeItf, (100-percent)*-30);
+        }else if(percent >5)
+        {
+            (*slVolumeItf)->SetVolumeLevel(slVolumeItf, (100-percent)*-37);
+        }else if(percent >3)
+        {
+            (*slVolumeItf)->SetVolumeLevel(slVolumeItf, (100-percent)*-40);
+        }else if(percent >0)
+        {
+            (*slVolumeItf)->SetVolumeLevel(slVolumeItf, (100-percent)*-100);
+        }
+
+    }
+
+}
+
+void MAudio::setMute(int mute) {
+    //判断接口存不存在
+    if(slMuteSoloItf!=NULL)
+    {
+        LOGD("AUDIO 收到")
+        if(mute==0)
+        {
+            //right
+            LOGD("右声道开启")
+            (*slMuteSoloItf)->SetChannelMute(slMuteSoloItf,1, false);//关闭左声道
+            (*slMuteSoloItf)->SetChannelMute(slMuteSoloItf,0, true);//开启右声道
+        }else if(mute==1)
+        {
+            //left
+            (*slMuteSoloItf)->SetChannelMute(slMuteSoloItf,1, true);//开启左声道
+            (*slMuteSoloItf)->SetChannelMute(slMuteSoloItf,0, false);//关闭右声道
+        }else if(mute==2)
+        {
+            //threed
+            (*slMuteSoloItf)->SetChannelMute(slMuteSoloItf,1, false);//开启左声道
+            (*slMuteSoloItf)->SetChannelMute(slMuteSoloItf,0, false);//开启右声道
+        }
+    }
+
 }
 

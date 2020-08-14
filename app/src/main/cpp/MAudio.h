@@ -38,7 +38,7 @@ public:
     double now_time = 0;
     double clock = 0;
     double last_time = 0;
-
+    int defaultvolume = 60;
     //OpenSLES
     //定义引擎接口
     SLObjectItf engineObjectItf = NULL;
@@ -50,6 +50,14 @@ public:
     //pcm
     SLObjectItf  pcmplayer = NULL;
     SLPlayItf slPlayItf = NULL;
+
+    //声音接口
+    SLVolumeItf slVolumeItf = NULL;
+
+    //声道接口
+    SLMuteSoloItf slMuteSoloItf = NULL;
+
+    //PCM缓冲区
     SLAndroidSimpleBufferQueueItf pcmBufferQueue = NULL;
 
 
@@ -74,6 +82,10 @@ public:
     void stop();
 
     void release();
+
+    void setVolume(int percent);
+
+    void setMute(int mute);
 
 
 };

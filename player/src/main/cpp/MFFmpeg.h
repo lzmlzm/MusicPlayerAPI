@@ -57,6 +57,10 @@ public:
     void release();
 
     void seek(int64_t secs);
+
+    void setVolume(int percent);
+
+    void setMute(int mute);
 };
 
 
