@@ -353,16 +353,26 @@ void MFFmpeg::setVolume(int percent) {
         //设置音量
         audio->setVolume(percent);
     }
-
 }
 
 void MFFmpeg::setMute(int mute) {
     if(audio!=NULL)
     {
         //设置声道
-        LOGD("FFMPEG 收到")
         audio->setMute(mute);
-
     }
+}
 
+void MFFmpeg::setPitch(float pitch) {
+    if(audio!=NULL)
+    {
+        audio->setPitch(pitch);
+    }
+}
+
+void MFFmpeg::setSpeed(float speed) {
+    if(audio!=NULL)
+    {
+        audio->setSpeed(speed);
+    }
 }

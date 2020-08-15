@@ -217,6 +217,15 @@ public class Mplayer {
         }
     }
 
+    public void setPitch(float pitch)
+    {
+        n_pitch(pitch);
+    }
+
+    public void setSpeed(float speed)
+    {
+        n_speed(speed);
+    }
 
     //解码音频
     private native void n_prepared(String source);
@@ -236,4 +245,8 @@ public class Mplayer {
     private native void n_volume(int percent);
 
     private native void n_mute(int mute);
+
+    private native void n_pitch(float pitch);
+
+    private native void n_speed(float speed);
 }

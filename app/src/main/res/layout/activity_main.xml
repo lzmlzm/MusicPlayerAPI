@@ -4,44 +4,45 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
 
-    tools:context=".MainActivity"
-    >
+    android:orientation="vertical"
+    tools:context=".MainActivity">
 
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="60dp"
         android:orientation="horizontal">
+
         <Button
             android:id="@+id/button4"
             android:layout_width="80dp"
             android:layout_height="60dp"
+            android:layout_gravity="center"
             android:onClick="begin"
-            android:text="@string/start"
-            android:layout_gravity="center"/>
+            android:text="@string/start" />
+
         <Button
             android:id="@+id/button"
             android:layout_width="80dp"
             android:layout_height="60dp"
+            android:layout_gravity="center"
             android:onClick="pause"
-            android:text="@string/stop"
-            android:layout_gravity="center"/>
+            android:text="@string/stop" />
 
         <Button
             android:layout_width="80dp"
             android:layout_height="60dp"
+            android:layout_gravity="center"
             android:onClick="next"
-            android:text="切换播放"
-            android:layout_gravity="center"/>
+            android:text="切换播放" />
 
         <Button
             android:id="@+id/button3"
             android:layout_width="80dp"
             android:layout_height="60dp"
+            android:layout_gravity="center"
             android:onClick="resume"
-            android:text="播放"
-            android:layout_gravity="center"/>
+            android:text="播放" />
 
         <Button
             android:id="@+id/button5"
@@ -52,9 +53,11 @@
             android:text="seek" />
 
     </LinearLayout>
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
+
         <Button
             android:id="@+id/button2"
             android:layout_width="80dp"
@@ -67,29 +70,29 @@
         <Button
             android:layout_width="80dp"
             android:layout_height="60dp"
-            android:onClick="switchCamera"
-            android:text="切换摄像头"
             android:layout_gravity="center"
-            />
+            android:onClick="switchCamera"
+            android:text="切换摄像头" />
 
         <Button
             android:id="@+id/camera_capture_button"
             android:layout_width="80dp"
             android:layout_height="60dp"
+            android:layout_gravity="center"
             android:onClick="takePhoto"
             android:scaleType="fitCenter"
-            android:text="拍照"
-            android:layout_gravity="center"/>
+            android:text="拍照" />
 
         <Button
             android:id="@+id/push"
-            android:onClick="startCap"
             android:layout_width="80dp"
             android:layout_height="60dp"
-            android:text="录制"
-            android:layout_gravity="center"/>
+            android:layout_gravity="center"
+            android:onClick="startCap"
+            android:text="录制" />
 
     </LinearLayout>
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -102,43 +105,46 @@
             android:layout_gravity="center"
             android:text="00:00/00:00"
             android:textColor="#222222" />
+
         <SeekBar
             android:id="@+id/seekbar_seek"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
+
             <Button
                 android:id="@+id/left"
-                android:onClick="turnleft"
                 android:layout_width="80dp"
                 android:layout_height="40dp"
-                android:text="左声道"
                 android:layout_gravity="left"
-                />
+                android:onClick="turnleft"
+                android:text="左声道" />
+
             <Button
                 android:id="@+id/right"
-                android:onClick="turnright"
                 android:layout_width="80dp"
                 android:layout_height="40dp"
-                android:text="右声道"
                 android:layout_gravity="center"
-                />
+                android:onClick="turnright"
+                android:text="右声道" />
+
             <Button
                 android:id="@+id/threed"
-                android:onClick="threed"
                 android:layout_width="80dp"
                 android:layout_height="40dp"
-                android:text="立体声"
                 android:layout_gravity="center"
-                />
+                android:onClick="threed"
+                android:text="立体声" />
         </LinearLayout>
 
         <SeekBar
             android:id="@+id/volume_bar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
+
         <androidx.camera.view.PreviewView
             android:id="@+id/viewFinder"
             android:layout_width="match_parent"

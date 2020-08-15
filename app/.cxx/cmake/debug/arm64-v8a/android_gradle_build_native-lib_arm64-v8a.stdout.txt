@@ -1,2 +1,54 @@
-ninja: Entering directory `C:\Users\nxf65025\AndroidStudioProjects\VideoAPP\app\.cxx\cmake\debug\arm64-v8a'
-ninja: no work to do.
+ninja: Entering directory `/Users/jennie/StudioProjects/VideoAPP/app/.cxx/cmake/debug/arm64-v8a'
+[1/7] Building CXX object CMakeFiles/native-lib.dir/MPlaystatus.cpp.o
+[2/7] Building CXX object CMakeFiles/native-lib.dir/MCallJava.cpp.o
+[3/7] Building CXX object CMakeFiles/native-lib.dir/MAudio.cpp.o
+/Users/jennie/StudioProjects/VideoAPP/app/src/main/cpp/MAudio.cpp:100:21: warning: implicit conversion of NULL constant to 'int' [-Wnull-conversion]
+                    NULL,
+                    ^~~~
+                    0
+/Users/jennie/StudioProjects/VideoAPP/app/src/main/cpp/MAudio.cpp:385:28: warning: if statement has empty body [-Wempty-body]
+    if(mPlaystatus != NULL);
+                           ^
+/Users/jennie/StudioProjects/VideoAPP/app/src/main/cpp/MAudio.cpp:385:28: note: put the semicolon on a separate line to silence this warning
+2 warnings generated.
+[4/7] Building CXX object CMakeFiles/native-lib.dir/MFFmpeg.cpp.o
+/Users/jennie/StudioProjects/VideoAPP/app/src/main/cpp/MFFmpeg.cpp:61:53: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+            callJava->onCallError(CHILD_THREAD,1001,"CAN NOT OPEN URL");
+                                                    ^
+/Users/jennie/StudioProjects/VideoAPP/app/src/main/cpp/MFFmpeg.cpp:72:53: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+            callJava->onCallError(CHILD_THREAD,1002,"CAN NOT FIND STREAM FROM URL");
+                                                    ^
+/Users/jennie/StudioProjects/VideoAPP/app/src/main/cpp/MFFmpeg.cpp:109:53: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+            callJava->onCallError(CHILD_THREAD,1003,"CAN NOT FIND DECODER");
+                                                    ^
+/Users/jennie/StudioProjects/VideoAPP/app/src/main/cpp/MFFmpeg.cpp:123:53: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+            callJava->onCallError(CHILD_THREAD,1004,"CAN NOT ALLOC NEW DECODERCTX");
+                                                    ^
+/Users/jennie/StudioProjects/VideoAPP/app/src/main/cpp/MFFmpeg.cpp:135:53: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+            callJava->onCallError(CHILD_THREAD,1005,"CAN NOT FILL DECODER");
+                                                    ^
+/Users/jennie/StudioProjects/VideoAPP/app/src/main/cpp/MFFmpeg.cpp:147:53: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+            callJava->onCallError(CHILD_THREAD,1006,"CAN NOT OPEN AUDIO STREAMS");
+                                                    ^
+/Users/jennie/StudioProjects/VideoAPP/app/src/main/cpp/MFFmpeg.cpp:167:53: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+            callJava->onCallError(CHILD_THREAD,1007,"AUDIO IS NULL");
+                                                    ^
+7 warnings generated.
+[5/7] Building CXX object CMakeFiles/native-lib.dir/native-lib.cpp.o
+[6/7] Building CXX object CMakeFiles/native-lib.dir/MQueue.cpp.o
+/Users/jennie/StudioProjects/VideoAPP/app/src/main/cpp/MQueue.cpp:28:49: warning: format specifies type 'int' but the argument has type 'std::__ndk1::queue<AVPacket *, std::__ndk1::deque<AVPacket *, std::__ndk1::allocator<AVPacket *> > >::size_type' (aka 'unsigned long') [-Wformat]
+        LOGD("PUT ONE AVPACKET TO QUEUE,NUM:%d",queuePacket.size());
+                                            ~~  ^~~~~~~~~~~~~~~~~~
+                                            %lu
+/Users/jennie/StudioProjects/VideoAPP/app/src/main/cpp/AndroidLog.h:12:80: note: expanded from macro 'LOGD'
+#define LOGD(FORMAT,...)  __android_log_print(ANDROID_LOG_DEBUG,"LZM",FORMAT,##__VA_ARGS__);
+                                                                      ~~~~~~   ^~~~~~~~~~~
+/Users/jennie/StudioProjects/VideoAPP/app/src/main/cpp/MQueue.cpp:55:61: warning: format specifies type 'int' but the argument has type 'std::__ndk1::queue<AVPacket *, std::__ndk1::deque<AVPacket *, std::__ndk1::allocator<AVPacket *> > >::size_type' (aka 'unsigned long') [-Wformat]
+                LOGD("GET AVPACKET FROM QUEUE ,LEAVE ：%d",queuePacket.size());
+                                                       ~~  ^~~~~~~~~~~~~~~~~~
+                                                       %lu
+/Users/jennie/StudioProjects/VideoAPP/app/src/main/cpp/AndroidLog.h:12:80: note: expanded from macro 'LOGD'
+#define LOGD(FORMAT,...)  __android_log_print(ANDROID_LOG_DEBUG,"LZM",FORMAT,##__VA_ARGS__);
+                                                                      ~~~~~~   ^~~~~~~~~~~
+2 warnings generated.
+[7/7] Linking CXX shared library /Users/jennie/StudioProjects/VideoAPP/app/build/intermediates/cmake/debug/obj/arm64-v8a/libnative-lib.so

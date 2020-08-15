@@ -29,7 +29,22 @@ add_library(
         MFFmpeg.cpp
         MQueue.cpp
         MPlaystatus.cpp
-        )
+        SoundTouch/AAFilter.cpp
+        SoundTouch/SoundTouch.cpp
+        SoundTouch/FIFOSampleBuffer.cpp
+        SoundTouch/InterpolateCubic.cpp
+        SoundTouch/InterpolateLinear.cpp
+        SoundTouch/InterpolateShannon.cpp
+        SoundTouch/BPMDetect.cpp
+        SoundTouch/TDStretch.cpp
+        SoundTouch/PeakFinder.cpp
+        SoundTouch/RateTransposer.cpp
+        SoundTouch/cpu_detect_x86.cpp
+        SoundTouch/mmx_optimized.cpp
+        SoundTouch/sse_optimized.cpp
+        SoundTouch/FIRFilter.cpp
+
+)
 
 find_library(
         log-lib

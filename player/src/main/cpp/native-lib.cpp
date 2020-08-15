@@ -124,12 +124,10 @@ Java_com_lzm_player_myplayer_Mplayer_n_1stop(JNIEnv *env, jobject instance) {
 }extern "C"
 JNIEXPORT void JNICALL
 Java_com_lzm_player_myplayer_Mplayer_n_1seek(JNIEnv *env, jobject instance, jint secs) {
-
     if(mfFmpeg != NULL)
     {
         mfFmpeg->seek(secs);
     }
-
 }extern "C"
 JNIEXPORT jint JNICALL
 Java_com_lzm_player_myplayer_Mplayer_n_1duration(JNIEnv *env, jobject thiz) {
@@ -149,7 +147,18 @@ Java_com_lzm_player_myplayer_Mplayer_n_1volume(JNIEnv *env, jobject thiz, jint p
 JNIEXPORT void JNICALL
 Java_com_lzm_player_myplayer_Mplayer_n_1mute(JNIEnv *env, jobject thiz, jint mute) {
     if (mfFmpeg != NULL) {
-        LOGD("----------------------------------------------------->NATIVE MUTE")
         mfFmpeg->setMute(mute);
+    }
+}extern "C"
+JNIEXPORT void JNICALL
+Java_com_lzm_player_myplayer_Mplayer_n_1pitch(JNIEnv *env, jobject thiz, jfloat pitch) {
+    if (mfFmpeg != NULL) {
+        mfFmpeg->setPitch(pitch);
+    }
+}extern "C"
+JNIEXPORT void JNICALL
+Java_com_lzm_player_myplayer_Mplayer_n_1speed(JNIEnv *env, jobject thiz, jfloat speed) {
+    if (mfFmpeg != NULL) {
+        mfFmpeg->setSpeed(speed);
     }
 }

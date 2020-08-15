@@ -10,6 +10,8 @@
 #include "MCallJava.h"
 #include <SLES/OpenSLES.h>
 #include <SLES/OpenSLES_Android.h>
+#include "SoundTouch.h"
+using namespace soundtouch;
 extern"C"
 {
 #include <libavcodec/avcodec.h>
@@ -32,13 +34,23 @@ public:
     uint8_t *buffer =NULL;
     int data_size = 0;
     int sample_rate = 0;
-
+    int nb=0;
     int duration = 0;
     AVRational time_base;
     double now_time = 0;
     double clock = 0;
     double last_time = 0;
     int defaultvolume = 60;
+    bool isSoundTouchEnd = true;
+    //pcm data buffer
+    uint8_t *outbuffer = NULL;
+
+    int soudTouchnum = 0;
+
+    //默认速度和音调为1
+    int pitch = 1;
+    int speed = 1;
+
     //OpenSLES
     //定义引擎接口
     SLObjectItf engineObjectItf = NULL;
@@ -60,6 +72,11 @@ public:
     //PCM缓冲区
     SLAndroidSimpleBufferQueueItf pcmBufferQueue = NULL;
 
+    //soundtouch
+
+    SoundTouch *soundTouch = NULL;
+    SAMPLETYPE *samplebuffer = NULL;
+
 
 
 public:
@@ -69,7 +86,7 @@ public:
 
     void play();
 
-    int resampleAudio();
+    int resampleAudio(void **pcmbuffer);
 
     void initOpenSLES();
 
@@ -86,6 +103,13 @@ public:
     void setVolume(int percent);
 
     void setMute(int mute);
+
+    int getSoundTouchdata();
+
+    void setPitch(float pitch);
+
+
+    void setSpeed(float speed);
 
 
 };

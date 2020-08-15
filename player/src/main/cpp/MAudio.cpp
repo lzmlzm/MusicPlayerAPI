@@ -11,6 +11,15 @@ MAudio::MAudio(MPlaystatus *mPlaystatus, int sample_rate, MCallJava *CallJava) {
     this->sample_rate = sample_rate;
     queue = new MQueue(mPlaystatus);
     buffer = static_cast<uint8_t *>(av_malloc(sample_rate * 2 * 2));
+    samplebuffer = static_cast<SAMPLETYPE *>(malloc(sample_rate*2*2));
+
+    soundTouch->setSampleRate(sample_rate);
+    soundTouch->setChannels(2);
+
+    //音调设置
+    soundTouch->setPitch(pitch);
+    //速度设置
+    soundTouch->setTempo(speed);
 }
 
 MAudio::~MAudio() {
@@ -36,7 +45,7 @@ void MAudio::play() {
 
 }
 
-int MAudio::resampleAudio() {
+int MAudio::resampleAudio(void **pcmbuffer) {
 
     while (mPlaystatus != NULL && !mPlaystatus->exit)
     {
@@ -115,7 +124,7 @@ int MAudio::resampleAudio() {
                 continue;
             }
             //重采样获取pcm的buffer
-            int nb = swr_convert(swr_ctx, &buffer,
+            nb= swr_convert(swr_ctx, &buffer,
                     avFrame->nb_samples,
                     (const uint8_t **)(avFrame->data),
                     avFrame->nb_samples);
@@ -137,6 +146,8 @@ int MAudio::resampleAudio() {
                 LOGE("DATA SIZE IS :%d",data_size);
             }
 
+            //传人pcmbuffer传给Sountouch
+            *pcmbuffer = buffer;
             av_packet_free(&avPacket);
             av_free(avPacket);
             avPacket = NULL;//释放内存
@@ -169,8 +180,8 @@ void pcmBufferCallBack(SLAndroidSimpleBufferQueueItf bf, void *context) {
     if(mAudio!=NULL)
     {
         //重采样获得PCM buffer数据和大小
-        //resampleAudio将解码出来的数据写入buffer
-        int buffersize = mAudio->resampleAudio();
+        //resampleAudio将解码出来的数据写入buffer->sountouch
+        int buffersize = mAudio->getSoundTouchdata();
         if (buffersize > 0)
         {
             //设置播放时长：PCM时间数据大小/每秒理论PCM大小
@@ -181,8 +192,8 @@ void pcmBufferCallBack(SLAndroidSimpleBufferQueueItf bf, void *context) {
                 mAudio->callJava->onCallTimeInfo(CHILD_THREAD, mAudio->clock, mAudio->duration);
             }
 
-            //将重采样的pcm buffer数据入队
-            (*mAudio->pcmBufferQueue)->Enqueue(mAudio->pcmBufferQueue,mAudio->buffer,buffersize);
+            //将重采样的soundtouch处理的pcm buffer数据入队
+            (*mAudio->pcmBufferQueue)->Enqueue(mAudio->pcmBufferQueue,mAudio->samplebuffer,buffersize*2*2);
         }
 
 
@@ -263,6 +274,7 @@ void MAudio::initOpenSLES() {
     (*pcmplayer)->GetInterface(pcmplayer,SL_IID_BUFFERQUEUE,&pcmBufferQueue);
     //设置默认音量
     setVolume(defaultvolume);
+
     //pcmBufferCallBack将实际的PCM数据放入pcmBufferQueue
     (*pcmBufferQueue)->RegisterCallback(pcmBufferQueue,pcmBufferCallBack,this);
 
@@ -454,5 +466,75 @@ void MAudio::setMute(int mute) {
         }
     }
 
+}
+int MAudio::getSoundTouchdata() {
+
+    //确保每次调用缓冲区为空
+    outbuffer=NULL;
+    //只有程序运行时有效
+    while (mPlaystatus != NULL && !mPlaystatus->exit)
+    {
+        if(isSoundTouchEnd)
+        {
+            isSoundTouchEnd = false;
+            data_size = resampleAudio(reinterpret_cast<void **>(&outbuffer));
+            if(data_size>0)
+            {
+                //pcm 8bit to 16bit
+                for(int i=0;i<data_size/2 + 1;i++)
+                {
+                    //pcm第二个8位数据填充到16位的后8位
+                    samplebuffer[i]=(outbuffer[2*i] | ((outbuffer[2*i+1])<<8));
+                }
+                //传入实际采样个数
+                soundTouch->putSamples(samplebuffer,nb);
+                //返回处理后的采样个数
+                soudTouchnum=soundTouch->receiveSamples(samplebuffer,data_size/4);
+
+            }
+        }else{
+            //=0 数据读取完，调用输出
+            soundTouch->flush();
+        }
+
+        if(soudTouchnum==0)
+        {
+            isSoundTouchEnd = true;
+            continue;
+        } else{
+            if(outbuffer==NULL)
+            {
+                soudTouchnum = soundTouch->receiveSamples(samplebuffer,data_size/4);
+                if(soudTouchnum==0)
+                {
+                    isSoundTouchEnd = true;
+                    continue;
+                }
+            }
+
+            return soudTouchnum;
+        }
+    }
+    return 0;
+}
+
+//设置播放音频的音调
+void MAudio::setPitch(float pitch) {
+
+    this->pitch = pitch;
+    if(soundTouch!=NULL)
+    {
+        soundTouch->setPitch(this->pitch);
+    }
+
+}
+//设置播放音频的速度
+void MAudio::setSpeed(float speed) {
+
+    this->speed = speed;
+    if(soundTouch!=NULL)
+    {
+        soundTouch->setTempo(this->speed);
+    }
 }
 

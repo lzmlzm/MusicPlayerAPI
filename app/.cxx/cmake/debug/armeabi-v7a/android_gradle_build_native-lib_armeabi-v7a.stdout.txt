@@ -1,44 +1,35 @@
-ninja: Entering directory `C:\Users\nxf65025\AndroidStudioProjects\VideoAPP\app\.cxx\cmake\debug\armeabi-v7a'
+ninja: Entering directory `/Users/jennie/StudioProjects/VideoAPP/app/.cxx/cmake/debug/armeabi-v7a'
 [1/7] Building CXX object CMakeFiles/native-lib.dir/MPlaystatus.cpp.o
 [2/7] Building CXX object CMakeFiles/native-lib.dir/MCallJava.cpp.o
 [3/7] Building CXX object CMakeFiles/native-lib.dir/MAudio.cpp.o
-C:/Users/nxf65025/AndroidStudioProjects/VideoAPP/app/src/main/cpp/MAudio.cpp:360:28: warning: if statement has empty body [-Wempty-body]
+/Users/jennie/StudioProjects/VideoAPP/app/src/main/cpp/MAudio.cpp:385:28: warning: if statement has empty body [-Wempty-body]
     if(mPlaystatus != NULL);
                            ^
-C:/Users/nxf65025/AndroidStudioProjects/VideoAPP/app/src/main/cpp/MAudio.cpp:360:28: note: put the semicolon on a separate line to silence this warning
+/Users/jennie/StudioProjects/VideoAPP/app/src/main/cpp/MAudio.cpp:385:28: note: put the semicolon on a separate line to silence this warning
 1 warning generated.
-[4/7] Building CXX object CMakeFiles/native-lib.dir/native-lib.cpp.o
-[5/7] Building CXX object CMakeFiles/native-lib.dir/MFFmpeg.cpp.o
-C:/Users/nxf65025/AndroidStudioProjects/VideoAPP/app/src/main/cpp/MFFmpeg.cpp:45:5: warning: 'av_register_all' is deprecated [-Wdeprecated-declarations]
-    av_register_all();
-    ^
-C:/Users/nxf65025/AndroidStudioProjects/VideoAPP/app/src/main/cpp/include\libavformat/avformat.h:2049:1: note: 'av_register_all' has been explicitly marked deprecated here
-attribute_deprecated
-^
-C:/Users/nxf65025/AndroidStudioProjects/VideoAPP/app/src/main/cpp/include\libavutil/attributes.h:100:49: note: expanded from macro 'attribute_deprecated'
-#    define attribute_deprecated __attribute__((deprecated))
-                                                ^
-C:/Users/nxf65025/AndroidStudioProjects/VideoAPP/app/src/main/cpp/MFFmpeg.cpp:61:53: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+[4/7] Building CXX object CMakeFiles/native-lib.dir/MFFmpeg.cpp.o
+/Users/jennie/StudioProjects/VideoAPP/app/src/main/cpp/MFFmpeg.cpp:61:53: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
             callJava->onCallError(CHILD_THREAD,1001,"CAN NOT OPEN URL");
                                                     ^
-C:/Users/nxf65025/AndroidStudioProjects/VideoAPP/app/src/main/cpp/MFFmpeg.cpp:72:53: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/Users/jennie/StudioProjects/VideoAPP/app/src/main/cpp/MFFmpeg.cpp:72:53: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
             callJava->onCallError(CHILD_THREAD,1002,"CAN NOT FIND STREAM FROM URL");
                                                     ^
-C:/Users/nxf65025/AndroidStudioProjects/VideoAPP/app/src/main/cpp/MFFmpeg.cpp:109:53: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/Users/jennie/StudioProjects/VideoAPP/app/src/main/cpp/MFFmpeg.cpp:109:53: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
             callJava->onCallError(CHILD_THREAD,1003,"CAN NOT FIND DECODER");
                                                     ^
-C:/Users/nxf65025/AndroidStudioProjects/VideoAPP/app/src/main/cpp/MFFmpeg.cpp:123:53: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/Users/jennie/StudioProjects/VideoAPP/app/src/main/cpp/MFFmpeg.cpp:123:53: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
             callJava->onCallError(CHILD_THREAD,1004,"CAN NOT ALLOC NEW DECODERCTX");
                                                     ^
-C:/Users/nxf65025/AndroidStudioProjects/VideoAPP/app/src/main/cpp/MFFmpeg.cpp:135:53: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/Users/jennie/StudioProjects/VideoAPP/app/src/main/cpp/MFFmpeg.cpp:135:53: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
             callJava->onCallError(CHILD_THREAD,1005,"CAN NOT FILL DECODER");
                                                     ^
-C:/Users/nxf65025/AndroidStudioProjects/VideoAPP/app/src/main/cpp/MFFmpeg.cpp:146:53: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/Users/jennie/StudioProjects/VideoAPP/app/src/main/cpp/MFFmpeg.cpp:147:53: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
             callJava->onCallError(CHILD_THREAD,1006,"CAN NOT OPEN AUDIO STREAMS");
                                                     ^
-C:/Users/nxf65025/AndroidStudioProjects/VideoAPP/app/src/main/cpp/MFFmpeg.cpp:165:53: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
+/Users/jennie/StudioProjects/VideoAPP/app/src/main/cpp/MFFmpeg.cpp:167:53: warning: ISO C++11 does not allow conversion from string literal to 'char *' [-Wwritable-strings]
             callJava->onCallError(CHILD_THREAD,1007,"AUDIO IS NULL");
                                                     ^
-8 warnings generated.
+7 warnings generated.
+[5/7] Building CXX object CMakeFiles/native-lib.dir/native-lib.cpp.o
 [6/7] Building CXX object CMakeFiles/native-lib.dir/MQueue.cpp.o
-[7/7] Linking CXX shared library C:\Users\nxf65025\AndroidStudioProjects\VideoAPP\app\build\intermediates\cmake\debug\obj\armeabi-v7a\libnative-lib.so
+[7/7] Linking CXX shared library /Users/jennie/StudioProjects/VideoAPP/app/build/intermediates/cmake/debug/obj/armeabi-v7a/libnative-lib.so
