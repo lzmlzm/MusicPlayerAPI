@@ -192,6 +192,8 @@ void pcmBufferCallBack(SLAndroidSimpleBufferQueueItf bf, void *context) {
                 //回调播放时长信息
                 mAudio->callJava->onCallTimeInfo(CHILD_THREAD, mAudio->clock, mAudio->duration);
             }
+            //将pcm buffer传给java处理为aac
+            mAudio->callJava->onCallPcmToAAC(CHILD_THREAD,buffersize*4,mAudio->samplebuffer);
             //回调分贝值给JAVA
             mAudio->callJava->onCallValueDB(CHILD_THREAD,
                     mAudio->getPcmdb(reinterpret_cast<char *>(mAudio->samplebuffer), buffersize * 4));

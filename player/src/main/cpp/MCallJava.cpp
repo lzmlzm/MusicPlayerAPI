@@ -30,7 +30,8 @@ MCallJava::MCallJava(JavaVM *javaVM, JNIEnv *env, jobject *obj) {
     jmid_load = env->GetMethodID(jlz, "onCallLoad", "(Z)V");
     jmid_timeinfo = env->GetMethodID(jlz, "onCallTimeInfo", "(II)V");
     jmid_error = env->GetMethodID(jlz,"onCallError","(ILjava/lang/String;)V");
-    jmid_db = env->GetMethodID(jlz,"onCallValueDB","(I)V")
+    jmid_db = env->GetMethodID(jlz,"onCallValueDB","(I)V");
+    jmid_callpcmtoaac = env->GetMethodID(jlz,"encodePcmToAAC","(I[B)V");
 }
 
 MCallJava::~MCallJava() {
@@ -154,4 +155,39 @@ void MCallJava::onCallValueDB(int type, int db) {
         jniEnv->CallVoidMethod(jobj, jmid_db, db);
         javaVM->DetachCurrentThread();
     }
+}
+
+void MCallJava::onCallPcmToAAC(int type, int size, void *buffer) {
+    if (type == MAIN_THREAD) {
+        //将C++层的buffer转换成jbyte array，传给java层
+        jbyteArray jbuffer = jniEnv->NewByteArray(size);
+        //填充数据
+        jniEnv->SetByteArrayRegion(jbuffer, 0, size, static_cast<const jbyte *>(buffer));
+
+        //
+        jniEnv->CallVoidMethod(jobj, jmid_callpcmtoaac, size, jbuffer);
+
+        //销毁防止内存泄漏
+        jniEnv->DeleteLocalRef(jbuffer);
+
+    } else if (type == CHILD_THREAD) {
+        JNIEnv *jniEnv;
+        if (javaVM->AttachCurrentThread(&jniEnv, 0) != JNI_OK) {
+            if (LOG_DEBUG) {
+                LOGE("GET CHILD THREAD");
+                return;
+            }
+        }
+        //将C++层的buffer转换成jbyte array，传给java层
+        jbyteArray jbuffer = jniEnv->NewByteArray(size);
+        //填充数据
+        jniEnv->SetByteArrayRegion(jbuffer, 0, size, static_cast<const jbyte *>(buffer));
+
+        //
+        jniEnv->CallVoidMethod(jobj, jmid_callpcmtoaac, size, jbuffer);
+
+        //销毁防止内存泄漏
+        jniEnv->DeleteLocalRef(jbuffer);
+    }
+
 }

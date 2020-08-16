@@ -161,4 +161,11 @@ Java_com_lzm_player_myplayer_Mplayer_n_1speed(JNIEnv *env, jobject thiz, jfloat 
     if (mfFmpeg != NULL) {
         mfFmpeg->setSpeed(speed);
     }
+}extern "C"
+JNIEXPORT int JNICALL
+Java_com_lzm_player_myplayer_Mplayer_n_1samplerate(JNIEnv *env, jobject thiz) {
+    if (mfFmpeg != NULL) {
+        return mfFmpeg->getSamplerate();
+    }
+    return 0;
 }

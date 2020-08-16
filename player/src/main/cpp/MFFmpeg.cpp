@@ -346,6 +346,10 @@ void MFFmpeg::seek(int64_t secs) {
 
 }
 
+/**
+ * 设置音量
+ * @param percent
+ */
 //包装底层SL的音量设置函数
 void MFFmpeg::setVolume(int percent) {
     if(audio!=NULL)
@@ -354,7 +358,10 @@ void MFFmpeg::setVolume(int percent) {
         audio->setVolume(percent);
     }
 }
-
+/**
+ * 设置左右声道
+ * @param mute
+ */
 void MFFmpeg::setMute(int mute) {
     if(audio!=NULL)
     {
@@ -375,4 +382,18 @@ void MFFmpeg::setSpeed(float speed) {
     {
         audio->setSpeed(speed);
     }
+}
+
+/**
+ * 返回采样率
+ * @return 采样率
+ */
+int MFFmpeg::getSamplerate() {
+    if (audio!=NULL)
+    {
+        return audio->avCodecCtx->sample_rate;
+    }
+
+    return 0;
+
 }
