@@ -77,3 +77,5 @@
 644	1259	1597477062	CMakeFiles/native-lib.dir/SoundTouch/BPMDetect.cpp.o	ebc780a951f55db4
 973	1315	1597477062	CMakeFiles/native-lib.dir/SoundTouch/FIRFilter.cpp.o	496d055952fbe51b
 1315	1371	1597477062	/Users/jennie/StudioProjects/VideoAPP/player/build/intermediates/cmake/debug/obj/armeabi-v7a/libnative-lib.so	b0c7d193d106f948
+1	8	0	clean	bd75272928d5735b
+0	6	0	clean	bd75272928d5735b
