@@ -189,9 +189,12 @@ void pcmBufferCallBack(SLAndroidSimpleBufferQueueItf bf, void *context) {
 
             if (mAudio->clock - mAudio->last_time >= 0.1) {
                 mAudio->last_time = mAudio->clock;
+                //回调播放时长信息
                 mAudio->callJava->onCallTimeInfo(CHILD_THREAD, mAudio->clock, mAudio->duration);
             }
-
+            //回调分贝值给JAVA
+            mAudio->callJava->onCallValueDB(CHILD_THREAD,
+                    mAudio->getPcmdb(reinterpret_cast<char *>(mAudio->samplebuffer), buffersize * 4));
             //将重采样的soundtouch处理的pcm buffer数据入队
             (*mAudio->pcmBufferQueue)->Enqueue(mAudio->pcmBufferQueue,mAudio->samplebuffer,buffersize*2*2);
         }
@@ -528,6 +531,7 @@ void MAudio::setPitch(float pitch) {
     }
 
 }
+
 //设置播放音频的速度
 void MAudio::setSpeed(float speed) {
 
@@ -536,5 +540,27 @@ void MAudio::setSpeed(float speed) {
     {
         soundTouch->setTempo(this->speed);
     }
+}
+
+//计算分贝
+int MAudio::getPcmdb(char *pcmdata, size_t pcmsize) {
+    int db = 0;
+    short int pervalue = 0;//每一帧的分贝值
+    double sum = 0;//分贝总和
+
+    for(int i=0;i<pcmsize;i += 2)
+    {
+        //取pcmdata中的两个值给value
+        memcpy(&pervalue,pcmdata+i,2);
+        sum  += abs(pervalue);
+    }
+    //由于每次取两个，所以/2
+    sum = sum / (pcmsize/2);
+    if(sum>0)
+    {
+        //分贝计算公式
+        db = (int)20*log10(sum);
+    }
+    return db;
 }
 

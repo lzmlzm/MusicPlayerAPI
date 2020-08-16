@@ -6,6 +6,7 @@ import com.lzm.player.listener.MOnLoadListener;
 import com.lzm.player.listener.MOnPauseResumeListener;
 import com.lzm.player.listener.MOnPreparedListener;
 import com.lzm.player.listener.MOnTimeInfoListener;
+import com.lzm.player.listener.MOnValueDBListener;
 import com.lzm.player.log.mylog;
 import com.lzm.player.muteenum.MuteEnum;
 
@@ -40,6 +41,7 @@ public class Mplayer {
     private MOnTimeInfoListener mOnTimeInfoListener;//时间信息接口
     private TimeInfo mtimeInfo;
     private MOnErrorListener mOnErrorListener; //出错接口
+    private MOnValueDBListener mOnValueDBListener;//pcm 分贝接口
 
 
 
@@ -179,6 +181,20 @@ public class Mplayer {
     public void setmOnTimeInfoListener(MOnTimeInfoListener mOnTimeInfoListener) {
         this.mOnTimeInfoListener = mOnTimeInfoListener;
     }
+
+    public void setmOnValueDBListener(MOnValueDBListener mOnValueDBListener) {
+        this.mOnValueDBListener = mOnValueDBListener;
+    }
+
+    //分贝接口回调
+    public void onCallValueDB(int db)
+    {
+        if(mOnValueDBListener!=null)
+        {
+            mOnValueDBListener.onDbValue(db);
+        }
+    }
+
     //回调函数，此函数会在C++调用JAVA使用，并在C++层回传load参数
     public void onCallLoad(boolean load) {
         if (mOnPreparedListener != null) {

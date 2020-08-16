@@ -30,6 +30,7 @@ MCallJava::MCallJava(JavaVM *javaVM, JNIEnv *env, jobject *obj) {
     jmid_load = env->GetMethodID(jlz, "onCallLoad", "(Z)V");
     jmid_timeinfo = env->GetMethodID(jlz, "onCallTimeInfo", "(II)V");
     jmid_error = env->GetMethodID(jlz,"onCallError","(ILjava/lang/String;)V");
+    jmid_db = env->GetMethodID(jlz,"onCallValueDB","(I)V")
 }
 
 MCallJava::~MCallJava() {
@@ -132,4 +133,25 @@ void MCallJava::onCallError(int type, int code, char *msg) {
         javaVM->DetachCurrentThread();
     }
 
+}
+
+void MCallJava::onCallValueDB(int type, int db) {
+
+    if (type == MAIN_THREAD) {
+
+        //
+        jniEnv->CallVoidMethod(jobj, jmid_db, db);
+
+    } else if (type == CHILD_THREAD) {
+        JNIEnv *jniEnv;
+        if (javaVM->AttachCurrentThread(&jniEnv, 0) != JNI_OK) {
+            if (LOG_DEBUG) {
+                LOGE("GET CHILD THREAD");
+                return;
+            }
+        }
+
+        jniEnv->CallVoidMethod(jobj, jmid_db, db);
+        javaVM->DetachCurrentThread();
+    }
 }

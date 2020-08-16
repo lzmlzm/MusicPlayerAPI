@@ -38,6 +38,7 @@ import com.lzm.player.listener.MOnLoadListener;
 import com.lzm.player.listener.MOnPauseResumeListener;
 import com.lzm.player.listener.MOnPreparedListener;
 import com.lzm.player.listener.MOnTimeInfoListener;
+import com.lzm.player.listener.MOnValueDBListener;
 import com.lzm.player.muteenum.MuteEnum;
 import com.lzm.player.myplayer.Mplayer;
 import com.lzm.player.log.mylog;
@@ -140,6 +141,16 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void OnError(int code, String msg) {
                 mylog.d("code:"+code+",msg"+msg);
+            }
+        });
+
+        //分贝回调
+        mplayer.setmOnValueDBListener(new MOnValueDBListener() {
+            @Override
+            public void onDbValue(int db) {
+
+                //打印底层回调上来的db
+                mylog.d("db is %d" + db);
             }
         });
 
