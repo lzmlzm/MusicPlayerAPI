@@ -27,7 +27,11 @@ MAudio::~MAudio() {
 
 }
 
-
+/**
+ * 解码函数
+ * @param data
+ * @return
+ */
 void *decodeplay(void *data)
 {
     MAudio *mAudio = static_cast<MAudio *>(data);
@@ -38,6 +42,9 @@ void *decodeplay(void *data)
     pthread_exit(&mAudio->pthread_play);
 }
 
+/**
+ * 开启播放线程
+ */
 void MAudio::play() {
 
     //创建音频播放器线程
@@ -45,6 +52,11 @@ void MAudio::play() {
 
 }
 
+/**
+ * 音频重采样
+ * @param pcmbuffer
+ * @return
+ */
 int MAudio::resampleAudio(void **pcmbuffer) {
 
     while (mPlaystatus != NULL && !mPlaystatus->exit)
@@ -174,6 +186,11 @@ int MAudio::resampleAudio(void **pcmbuffer) {
 }
 
 //通过SL缓冲队列回调，将PCM数据入队
+/**
+ * opensl es缓冲队列回调，将PCM数据入队
+ * @param bf
+ * @param context
+ */
 void pcmBufferCallBack(SLAndroidSimpleBufferQueueItf bf, void *context) {
 
     MAudio *mAudio = (MAudio *)(context);
@@ -192,8 +209,14 @@ void pcmBufferCallBack(SLAndroidSimpleBufferQueueItf bf, void *context) {
                 //回调播放时长信息
                 mAudio->callJava->onCallTimeInfo(CHILD_THREAD, mAudio->clock, mAudio->duration);
             }
-            //将pcm buffer传给java处理为aac
-            mAudio->callJava->onCallPcmToAAC(CHILD_THREAD,buffersize*4,mAudio->samplebuffer);
+
+            //根据录音状态处理pcm
+            if(mAudio->isRecordpcm)
+            {
+                //将pcm buffer传给java处理为aac
+                mAudio->callJava->onCallPcmToAAC(CHILD_THREAD,buffersize*4,mAudio->samplebuffer);
+            }
+
             //回调分贝值给JAVA
             mAudio->callJava->onCallValueDB(CHILD_THREAD,
                     mAudio->getPcmdb(reinterpret_cast<char *>(mAudio->samplebuffer), buffersize * 4));
@@ -205,6 +228,9 @@ void pcmBufferCallBack(SLAndroidSimpleBufferQueueItf bf, void *context) {
     }
 }
 
+/**
+ * 初始化opensl es
+ */
 void MAudio::initOpenSLES() {
     SLresult result;
     //OpenSLES初始化
@@ -290,6 +316,11 @@ void MAudio::initOpenSLES() {
 
 }
 
+/**
+ * 获取采样率
+ * @param sample_rate
+ * @return
+ */
 int MAudio::getCurrentSampleRateForOpenSLES(int sample_rate) {
 
     int rate = 0;
@@ -332,26 +363,35 @@ int MAudio::getCurrentSampleRateForOpenSLES(int sample_rate) {
     }
     return rate;
 }
-
+/**
+ * 设置暂停状态
+ */
 void MAudio::pause() {
     if (pcmplayer != NULL) {
-        (*slPlayItf)->SetPlayState(slPlayItf, SL_PLAYSTATE_PAUSED);//设置暂停状态
+        (*slPlayItf)->SetPlayState(slPlayItf, SL_PLAYSTATE_PAUSED);
     }
 }
-
+/**
+ * 设置恢复播放状态
+ */
 void MAudio::resume() {
     if (pcmplayer != NULL) {
-        (*slPlayItf)->SetPlayState(slPlayItf, SL_PLAYSTATE_PLAYING);//设置暂停状态
+        (*slPlayItf)->SetPlayState(slPlayItf, SL_PLAYSTATE_PLAYING);
     }
 }
-
+/**
+ * 设置停止状态
+ */
 void MAudio::stop() {
     if (pcmplayer != NULL) {
-        (*slPlayItf)->SetPlayState(slPlayItf, SL_PLAYSTATE_STOPPED);//设置暂停状态
+        (*slPlayItf)->SetPlayState(slPlayItf, SL_PLAYSTATE_STOPPED);
     }
 }
 
-/*释放内存*/
+
+/**
+ * 释放内存
+ */
 void MAudio::release() {
 
     stop();
@@ -410,6 +450,11 @@ void MAudio::release() {
     }
 }
 
+
+/**
+ * 设置音量
+ * @param percent
+ */
 void MAudio::setVolume(int percent) {
     if(slVolumeItf!=NULL)
     {   //音量分段处理使得音量大小过渡流畅
@@ -447,6 +492,10 @@ void MAudio::setVolume(int percent) {
 
 }
 
+/**
+ * 设置左右声道
+ * @param mute
+ */
 void MAudio::setMute(int mute) {
     //判断接口存不存在
     if(slMuteSoloItf!=NULL)
@@ -472,6 +521,12 @@ void MAudio::setMute(int mute) {
     }
 
 }
+
+
+/**
+ * 获取soundtouch采样后的数据
+ * @return 采样点个数
+ */
 int MAudio::getSoundTouchdata() {
 
     //确保每次调用缓冲区为空
@@ -523,7 +578,9 @@ int MAudio::getSoundTouchdata() {
     return 0;
 }
 
-//设置播放音频的音调
+/**
+ * 设置播放音频的音调
+ */
 void MAudio::setPitch(float pitch) {
 
     this->pitch = pitch;
@@ -534,7 +591,10 @@ void MAudio::setPitch(float pitch) {
 
 }
 
-//设置播放音频的速度
+/**
+ * 设置播放音频的速度
+ * @param speed
+ */
 void MAudio::setSpeed(float speed) {
 
     this->speed = speed;
@@ -544,7 +604,12 @@ void MAudio::setSpeed(float speed) {
     }
 }
 
-//计算分贝
+/**
+ * 计算分贝
+ * @param pcmdata
+ * @param pcmsize
+ * @return 分贝
+ */
 int MAudio::getPcmdb(char *pcmdata, size_t pcmsize) {
     int db = 0;
     short int pervalue = 0;//每一帧的分贝值
@@ -564,5 +629,13 @@ int MAudio::getPcmdb(char *pcmdata, size_t pcmsize) {
         db = (int)20*log10(sum);
     }
     return db;
+}
+
+/**
+ * audio层设置录音状态
+ * @param flags
+ */
+void MAudio::setRecordStatus(bool flags) {
+    this->isRecordpcm = flags;
 }
 

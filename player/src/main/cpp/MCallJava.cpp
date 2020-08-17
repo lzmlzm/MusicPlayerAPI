@@ -5,7 +5,9 @@
 #include "MCallJava.h"
 //C++回调JAVA
 //JNI层回调数据给JAVA
-
+/**
+ * 设置jvm环境
+ */
 MCallJava::MCallJava(JavaVM *javaVM, JNIEnv *env, jobject *obj) {
 
     //设置JAVA虚拟机、环境、obj
@@ -38,6 +40,10 @@ MCallJava::~MCallJava() {
 
 }
 
+/**
+ * 调用JAVA层资源准备函数
+ * @param type
+ */
 void MCallJava::onCallPrepared(int type) {
 
     //判断回调函数在主线程还是子线程
@@ -63,6 +69,11 @@ void MCallJava::onCallPrepared(int type) {
 
 }
 
+/**
+ * 传回播放加载状态
+ * @param type
+ * @param load
+ */
 void MCallJava::onCallLoad(int type, bool load) {
     //判断回调函数在主线程还是子线程
     if (type == MAIN_THREAD) {
@@ -86,6 +97,12 @@ void MCallJava::onCallLoad(int type, bool load) {
 
 }
 
+/**
+ * 传回播放时长
+ * @param type
+ * @param cur
+ * @param total
+ */
 void MCallJava::onCallTimeInfo(int type, int cur, int total) {
 
     if (type == MAIN_THREAD) {
@@ -107,6 +124,12 @@ void MCallJava::onCallTimeInfo(int type, int cur, int total) {
     }
 }
 
+/**
+ * 传回播放出错信息
+ * @param type
+ * @param code
+ * @param msg
+ */
 void MCallJava::onCallError(int type, int code, char *msg) {
 
     if(type == MAIN_THREAD)
@@ -136,6 +159,11 @@ void MCallJava::onCallError(int type, int code, char *msg) {
 
 }
 
+/**
+ * 回传分贝值
+ * @param type
+ * @param db
+ */
 void MCallJava::onCallValueDB(int type, int db) {
 
     if (type == MAIN_THREAD) {
@@ -157,6 +185,12 @@ void MCallJava::onCallValueDB(int type, int db) {
     }
 }
 
+/**
+ * pcm转aac数据，将C++层的pcm数据给JAVA层处理
+ * @param type
+ * @param size
+ * @param buffer
+ */
 void MCallJava::onCallPcmToAAC(int type, int size, void *buffer) {
     if (type == MAIN_THREAD) {
         //将C++层的buffer转换成jbyte array，传给java层

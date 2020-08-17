@@ -19,6 +19,11 @@ MQueue::~MQueue() {
 
 }
 
+/**
+ * AVPacket入队
+ * @param avPacket
+ * @return
+ */
 int MQueue::putAvpacket(AVPacket *avPacket) {
     //音视频数据包入队操作
     pthread_mutex_lock(&mutexPacket);
@@ -33,6 +38,11 @@ int MQueue::putAvpacket(AVPacket *avPacket) {
     return 0;
 }
 
+/**
+ * AVPacket出队
+ * @param avPacket
+ * @return
+ */
 int MQueue::outAvpacket(AVPacket *avPacket) {
     //音视频数据出队操作
     pthread_mutex_lock(&mutexPacket);
@@ -65,6 +75,10 @@ int MQueue::outAvpacket(AVPacket *avPacket) {
     return 0;
 }
 
+/**
+ * 获取AVPacket队列 大小
+ * @return
+ */
 int MQueue::getQueueSIze() {
 
     int size = 0;
@@ -75,6 +89,9 @@ int MQueue::getQueueSIze() {
 
 }
 
+/**
+ * 清空AVPacket
+ */
 void MQueue::clearAvpacket() {
 
     pthread_cond_signal(&condPacket);
@@ -88,8 +105,5 @@ void MQueue::clearAvpacket() {
         av_free(avPacket);
         avPacket = NULL;
     }
-
     pthread_mutex_unlock(&mutexPacket);
-
-
 }

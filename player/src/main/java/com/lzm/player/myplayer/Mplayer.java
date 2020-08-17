@@ -42,6 +42,7 @@ public class Mplayer {
     private static String source;
     private static int duration = -1;
     private static boolean playNext = false;
+    private static  boolean initMediacodec = false;
     int defaultvolume = 60;
 
     private MOnPreparedListener mOnPreparedListener;//准备接口
@@ -53,12 +54,13 @@ public class Mplayer {
     private MOnValueDBListener mOnValueDBListener;//pcm 分贝接口
 
 
-
-
-
     public  Mplayer(){}
 
     //实现播放
+
+    /**
+     * 准备播放资源
+     */
     public void prepared() {
         //判断链接是否为空
         if (TextUtils.isEmpty(source)) {
@@ -76,6 +78,9 @@ public class Mplayer {
         }).start();
     }
 
+    /**
+     * 开启播放线程
+     */
     public void start()
     {
         if(TextUtils.isEmpty(source))
@@ -91,6 +96,9 @@ public class Mplayer {
         }).start();
     }
 
+    /**
+     * 暂停播放
+     */
     public void pause() {
         n_pause();
         if (mOnPauseResumeListener != null) {
@@ -98,6 +106,9 @@ public class Mplayer {
         }
     }
 
+    /**
+     * 恢复播放
+     */
     public void resume() {
         n_reusme();
         if (mOnPauseResumeListener != null) {
@@ -105,10 +116,14 @@ public class Mplayer {
         }
     }
 
+    /**
+     * 播放停止
+     */
     public void stop()
     {
         mtimeInfo = null;
         duration = -1;//停止的时候还原值
+        stopRecord();
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -117,11 +132,19 @@ public class Mplayer {
         }).start();
     }
 
+    /**
+     * seek功能（需要改进精确性）
+     * @param secs
+     */
     public void seek(int secs)
     {
         n_seek(secs);
     }
 
+    /**
+     * 设置播放音量
+     * @param percent
+     */
     public void setVolume(int percent)
     {
         //音量数值在0-100之间
@@ -130,23 +153,38 @@ public class Mplayer {
             n_volume(percent);
         }
     }
-    //获取当前音量
+
+    /**
+     * 获取当前音量
+     * @return
+     */
     public int getCurrentVolume()
     {
         return  defaultvolume;
     }
 
-    //设置声道,枚举传入
+    /**
+     * 设置播放的左右声道、枚举传入
+     * @param muteEnum
+     */
     public void setMute(MuteEnum muteEnum)
     {
         //获取枚举里的值
         n_mute(muteEnum.getValue());
     }
+
+    /**
+     * 设置播放资源
+     * @param source
+     */
     public void setSource(String source) {
         this.source = source;
     }
 
-    //获取播放时长
+    /**
+     * 获取播放时长
+     * @return 音视频持续时间
+     */
     public  int getDuaration()
     {
         if(duration < 0)
@@ -156,12 +194,69 @@ public class Mplayer {
         return duration;
     }
 
+    /**
+     * 播放下一个资源
+     * @param url
+     */
     public void playNext(String url)
     {
         source = url;
         playNext = true;
         stop();
     }
+
+    /**
+     * 设置资源准备监听
+     * @param mOnPreparedListener
+     */
+    //设置回调接口
+    public void setmOnPreparedListener(MOnPreparedListener mOnPreparedListener) {
+        this.mOnPreparedListener = mOnPreparedListener;
+    }
+
+    /**
+     * 设置加载状态监听
+     * @param mOnLoadListener
+     */
+    public void setmOnLoadListener(MOnLoadListener mOnLoadListener) {
+        this.mOnLoadListener = mOnLoadListener;
+    }
+
+    /**
+     * 设置播放暂停、恢复监听
+     * @param mOnPauseResumeListener
+     */
+    public void setmOnPauseResumeListener(MOnPauseResumeListener mOnPauseResumeListener) {
+        this.mOnPauseResumeListener = mOnPauseResumeListener;
+    }
+
+    /**
+     * 设置出错监听
+     * @param mOnErrorListener
+     */
+    public void setmOnErrorListener(MOnErrorListener mOnErrorListener) {
+        this.mOnErrorListener = mOnErrorListener;
+    }
+
+    /**
+     * 设置时间信息监听
+     * @param mOnTimeInfoListener
+     */
+    public void setmOnTimeInfoListener(MOnTimeInfoListener mOnTimeInfoListener) {
+        this.mOnTimeInfoListener = mOnTimeInfoListener;
+    }
+
+    /**
+     * 设置分贝监听
+     * @param mOnValueDBListener
+     */
+    public void setmOnValueDBListener(MOnValueDBListener mOnValueDBListener) {
+        this.mOnValueDBListener = mOnValueDBListener;
+    }
+
+    /**
+     * 资源准备回调
+     */
     public void onCallPrepared()
     {
         if (mOnPreparedListener != null)
@@ -170,32 +265,10 @@ public class Mplayer {
         }
     }
 
-    //设置回调接口
-    public void setmOnPreparedListener(MOnPreparedListener mOnPreparedListener) {
-        this.mOnPreparedListener = mOnPreparedListener;
-    }
-
-    public void setmOnLoadListener(MOnLoadListener mOnLoadListener) {
-        this.mOnLoadListener = mOnLoadListener;
-    }
-
-    public void setmOnPauseResumeListener(MOnPauseResumeListener mOnPauseResumeListener) {
-        this.mOnPauseResumeListener = mOnPauseResumeListener;
-    }
-
-    public void setmOnErrorListener(MOnErrorListener mOnErrorListener) {
-        this.mOnErrorListener = mOnErrorListener;
-    }
-
-    public void setmOnTimeInfoListener(MOnTimeInfoListener mOnTimeInfoListener) {
-        this.mOnTimeInfoListener = mOnTimeInfoListener;
-    }
-
-    public void setmOnValueDBListener(MOnValueDBListener mOnValueDBListener) {
-        this.mOnValueDBListener = mOnValueDBListener;
-    }
-
-    //分贝接口回调
+    /**
+     * 分贝接口回调
+     * @param db
+     */
     public void onCallValueDB(int db)
     {
         if(mOnValueDBListener!=null)
@@ -205,13 +278,24 @@ public class Mplayer {
     }
 
     //回调函数，此函数会在C++调用JAVA使用，并在C++层回传load参数
+    /**
+     * C++层回传load参数
+     * @param load
+     */
     public void onCallLoad(boolean load) {
         if (mOnPreparedListener != null) {
             mOnLoadListener.onLoad(load);
         }
     }
+
+
     //C++层调用此JAVA函数并回传time信息，然后此JAVA函数调用接口，
     // main函数里覆写接口函数onTimeInfo获得接口的数据
+    /**
+     * 回传time信息
+     * @param currentTime
+     * @param totalTime
+     */
     public void onCallTimeInfo(int currentTime, int totalTime) {
         if (mOnTimeInfoListener != null) {
             if (mtimeInfo == null) {
@@ -224,6 +308,11 @@ public class Mplayer {
         }
     }
 
+    /**
+     * C++层出错回调
+     * @param code
+     * @param msg
+     */
     public void onCallError(int code,String msg)
     {
         stop();
@@ -232,7 +321,9 @@ public class Mplayer {
         }
     }
 
-    //切换下一个播放源
+    /**
+     * 切换下一个播放源
+     */
     public void onCallNext()
     {
         if(playNext)
@@ -242,20 +333,75 @@ public class Mplayer {
         }
     }
 
-    //开始录音
+
+
+    /**
+     * 开始录音
+     * @param outfile
+     * @throws IOException
+     */
     public void startRecord(File outfile) throws IOException {
         //初始化mediacodec
-        if(n_samplerate()>0)
+        if(!initMediacodec)
         {
-            initMediaCodec(n_samplerate(),outfile);
+            if(n_samplerate()>0)
+            {
+                initMediacodec = true;
+                initMediaCodec(n_samplerate(),outfile);
+                n_record(true);
+            }
         }
+
     }
 
+    /**
+     * 停止播放
+     */
+    public void stopRecord()
+    {
+        if (initMediacodec)
+        {
+            n_record(false);
+            try {
+
+                //停止释放资源
+                releaseMediacodec();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
+    /**
+     * 暂停录音
+     */
+    public void pauseRecord()
+    {
+        //暂停不释放资源
+        n_record(false);
+    }
+
+    /**
+     * 继续录音
+     */
+    public void resumeRecord()
+    {
+        n_record(true);
+    }
+    /**
+     * 设置音调
+     * @param pitch
+     */
     public void setPitch(float pitch)
     {
         n_pitch(pitch);
     }
 
+    /**
+     * 设置倍速
+     * @param speed
+     */
     public void setSpeed(float speed)
     {
         n_speed(speed);
@@ -285,6 +431,8 @@ public class Mplayer {
     private native void n_speed(float speed);
 
     private native int n_samplerate();
+
+    private native void n_record(boolean start);
 
     //mediacodec参数设置
     private MediaFormat encoderFormat = null;
@@ -339,6 +487,26 @@ public class Mplayer {
             e.printStackTrace();
         }
 
+    }
+
+    /**
+     * mediacodec释放
+     */
+    private void releaseMediacodec() throws IOException {
+        if(mediaCodec==null)
+        {
+            return;
+        }
+        outputStream.close();
+        outputStream=null;
+
+        mediaCodec.stop();
+        mediaCodec.release();
+        mediaCodec = null;
+        encoderFormat = null;
+        mediaCodecInfo = null;
+        initMediacodec = false;
+        mylog.d("mediacodec release录制完成");
     }
 
     /**

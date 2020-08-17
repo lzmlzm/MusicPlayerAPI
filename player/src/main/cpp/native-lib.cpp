@@ -168,4 +168,10 @@ Java_com_lzm_player_myplayer_Mplayer_n_1samplerate(JNIEnv *env, jobject thiz) {
         return mfFmpeg->getSamplerate();
     }
     return 0;
+}extern "C"
+JNIEXPORT void JNICALL
+Java_com_lzm_player_myplayer_Mplayer_n_1record(JNIEnv *env, jobject thiz, jboolean start) {
+    if (mfFmpeg != NULL) {
+         mfFmpeg->setRecordStatus(start);
+    }
 }

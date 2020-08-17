@@ -51,6 +51,8 @@ public:
     int pitch = 1;
     int speed = 1;
 
+    bool isRecordpcm = false;
+
     //OpenSLES
     //定义引擎接口
     SLObjectItf engineObjectItf = NULL;
@@ -108,10 +110,11 @@ public:
 
     void setPitch(float pitch);
 
-
     void setSpeed(float speed);
 
     int getPcmdb(char *pcmdata,size_t pcmsize);
+
+    void setRecordStatus(bool flags);
 
 
 

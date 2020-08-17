@@ -15,14 +15,20 @@ MFFmpeg::MFFmpeg(MPlaystatus *mPlaystatus,MCallJava *callJava, const char *url) 
 
 }
 
-//ffmpeg解码函数
+/**
+ * ffmpeg解码函数
+ * @param data
+ * @return
+ */
 void *decodeFFmpeg(void *data)
 {
     MFFmpeg *mfFmpeg = (MFFmpeg *)data;//数据强制转换
     mfFmpeg->decodeFFmpegThread();
     pthread_exit(&mfFmpeg->decodeThread);
 }
-
+/**
+ * 资源解析
+ */
 void MFFmpeg::prepared() {
     //创建数据解析线程
     pthread_create(&decodeThread,NULL,decodeFFmpeg,this);
@@ -40,7 +46,10 @@ int avformat_callback(void *ctx)
 
 }
 
-//ffmpeg解码线程准备函数
+
+/**
+ * ffmpeg资源解析函数
+ */
 void MFFmpeg::decodeFFmpegThread() {
     pthread_mutex_lock(&init_mutex);
 
@@ -158,6 +167,9 @@ void MFFmpeg::decodeFFmpegThread() {
 
 
 //开始处理数据
+/**
+ * 开始解码
+ */
 void MFFmpeg::start() {
     if(audio == NULL)
     {
@@ -251,18 +263,26 @@ void MFFmpeg::start() {
 
 }
 
+/**
+ * 设置暂停播放
+ */
 void MFFmpeg::pause() {
     if (audio != NULL) {
         audio->pause();
     }
 }
-
+/**
+ * 恢复播放
+ */
 void MFFmpeg::resume() {
     if (audio != NULL) {
         audio->resume();
     }
 }
 
+/**
+ * 资源释放
+ */
 void MFFmpeg::release() {
 
     if(mPlaystatus->exit)
@@ -318,7 +338,10 @@ MFFmpeg::~MFFmpeg() {
     pthread_mutex_destroy(&init_mutex);
 }
 
-//回溯功能
+/**
+ * seek功能
+ * @param secs
+ */
 void MFFmpeg::seek(int64_t secs) {
 
     if(duration<=0)
@@ -359,7 +382,7 @@ void MFFmpeg::setVolume(int percent) {
     }
 }
 /**
- * 设置左右声道
+ * ffmpeg层调用audio设置左右声道
  * @param mute
  */
 void MFFmpeg::setMute(int mute) {
@@ -370,6 +393,10 @@ void MFFmpeg::setMute(int mute) {
     }
 }
 
+/**
+ * ffmpeg层调用audio设置音调
+ * @param pitch
+ */
 void MFFmpeg::setPitch(float pitch) {
     if(audio!=NULL)
     {
@@ -377,6 +404,10 @@ void MFFmpeg::setPitch(float pitch) {
     }
 }
 
+/**
+ * ffmpeg调用audio设置播放速度
+ * @param speed
+ */
 void MFFmpeg::setSpeed(float speed) {
     if(audio!=NULL)
     {
@@ -393,7 +424,16 @@ int MFFmpeg::getSamplerate() {
     {
         return audio->avCodecCtx->sample_rate;
     }
-
     return 0;
+}
 
+/**
+ * ffmpeg层设置录音状态
+ * @param start
+ */
+void MFFmpeg::setRecordStatus(bool start) {
+    if (audio!=NULL)
+    {
+        audio->setRecordStatus(start);
+    }
 }
