@@ -4,22 +4,24 @@
 
 #include "MAudio.h"
 
-MAudio::MAudio(MPlaystatus *mPlaystatus, int sample_rate, MCallJava *CallJava) {
+MAudio::MAudio(MPlaystatus *mPlaystatus, int samplerate, MCallJava *CallJava) {
 
     this->callJava = CallJava;
     this->mPlaystatus = mPlaystatus;
-    this->sample_rate = sample_rate;
+    this->sample_rate = samplerate;
     queue = new MQueue(mPlaystatus);
     buffer = static_cast<uint8_t *>(av_malloc(sample_rate * 2 * 2));
+
     samplebuffer = static_cast<SAMPLETYPE *>(malloc(sample_rate*2*2));
+    soundTouch = new SoundTouch();
 
     soundTouch->setSampleRate(sample_rate);
     soundTouch->setChannels(2);
 
     //音调设置
-    soundTouch->setPitch(pitch);
+    soundTouch->setPitch(this->pitch);
     //速度设置
-    soundTouch->setTempo(speed);
+    soundTouch->setTempo(this->speed);
 }
 
 MAudio::~MAudio() {
@@ -59,6 +61,7 @@ void MAudio::play() {
  */
 int MAudio::resampleAudio(void **pcmbuffer) {
 
+    data_size=0;
     while (mPlaystatus != NULL && !mPlaystatus->exit)
     {
 
@@ -221,7 +224,7 @@ void pcmBufferCallBack(SLAndroidSimpleBufferQueueItf bf, void *context) {
             mAudio->callJava->onCallValueDB(CHILD_THREAD,
                     mAudio->getPcmdb(reinterpret_cast<char *>(mAudio->samplebuffer), buffersize * 4));
             //将重采样的soundtouch处理的pcm buffer数据入队
-            (*mAudio->pcmBufferQueue)->Enqueue(mAudio->pcmBufferQueue,mAudio->samplebuffer,buffersize*2*2);
+            (*mAudio->pcmBufferQueue)->Enqueue(mAudio->pcmBufferQueue,(char *)mAudio->samplebuffer,buffersize*2*2);
         }
 
 
@@ -538,23 +541,23 @@ int MAudio::getSoundTouchdata() {
         {
             isSoundTouchEnd = false;
             data_size = resampleAudio(reinterpret_cast<void **>(&outbuffer));
+
             if(data_size>0)
             {
                 //pcm 8bit to 16bit
-                for(int i=0;i<data_size/2 + 1;i++)
+                for(int i=0;i < data_size/2 + 1;i++)
                 {
                     //pcm第二个8位数据填充到16位的后8位
-                    samplebuffer[i]=(outbuffer[2*i] | ((outbuffer[2*i+1])<<8));
+                    samplebuffer[i]=(outbuffer[i*2] | ((outbuffer[2*i + 1])<<8));
                 }
                 //传入实际采样个数
                 soundTouch->putSamples(samplebuffer,nb);
                 //返回处理后的采样个数
                 soudTouchnum=soundTouch->receiveSamples(samplebuffer,data_size/4);
-
+            }else{
+                //=0 数据读取完，调用输出
+                soundTouch->flush();
             }
-        }else{
-            //=0 数据读取完，调用输出
-            soundTouch->flush();
         }
 
         if(soudTouchnum==0)
@@ -571,7 +574,6 @@ int MAudio::getSoundTouchdata() {
                     continue;
                 }
             }
-
             return soudTouchnum;
         }
     }

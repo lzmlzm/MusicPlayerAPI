@@ -214,8 +214,7 @@ public class MainActivity extends AppCompatActivity {
     }
     //开始播放按下
     public void begin(View view) {
-
-        mplayer.setSource("http://music.163.com/song/media/outer/url?id=281951.mp3");
+        mplayer.setSource(Environment.getExternalStorageDirectory()+"/test.mp3");
         //准备数据并投喂给队列
         mplayer.prepared();
     }
