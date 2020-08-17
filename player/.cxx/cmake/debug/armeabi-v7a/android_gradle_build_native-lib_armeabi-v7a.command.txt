@@ -1,7 +1,0 @@
-Executable : /Users/jennie/Library/Android/sdk/cmake/3.10.2.4988404/bin/ninja
-arguments : 
--C
-/Users/jennie/StudioProjects/VideoAPP/player/.cxx/cmake/debug/armeabi-v7a
-native-lib
-jvmArgs : 
-
