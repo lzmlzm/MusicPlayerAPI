@@ -192,11 +192,13 @@ void MFFmpeg::start() {
     {
         if(mPlaystatus->seek)
         {
+            av_usleep(1000*100);
             continue;
         }
 
-        if(audio->queue->getQueueSIze() > 40)
+        if(audio->queue->getQueueSIze() > 100)
         {
+            av_usleep(1000*100);
             continue;//存40帧再处理数据
         }
         //一个avpacket为一帧的数据包
@@ -233,7 +235,9 @@ void MFFmpeg::start() {
 
             while (mPlaystatus!= NULL && !mPlaystatus->exit)
             {
-                if(audio->queue->getQueueSIze() > 0){
+                if(audio->queue->getQueueSIze() > 0)
+                {
+                    av_usleep(1000*100);
                     continue;
                 } else{
                     mPlaystatus->exit = true;
@@ -359,6 +363,7 @@ void MFFmpeg::seek(int64_t secs) {
             pthread_mutex_lock(&seek_mutex);
 
             int64_t rel = secs*AV_TIME_BASE;
+            //
             avformat_seek_file(pFormatCtx,-1,INT64_MIN,rel,INT64_MAX,0);
 
             pthread_mutex_unlock(&seek_mutex);

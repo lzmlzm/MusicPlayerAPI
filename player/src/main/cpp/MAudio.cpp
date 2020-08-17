@@ -2,6 +2,7 @@
 // Created by lzm on 19-2-20.
 //
 
+#include <libavutil/time.h>
 #include "MAudio.h"
 
 MAudio::MAudio(MPlaystatus *mPlaystatus, int samplerate, MCallJava *CallJava) {
@@ -64,12 +65,19 @@ int MAudio::resampleAudio(void **pcmbuffer) {
     data_size=0;
     while (mPlaystatus != NULL && !mPlaystatus->exit)
     {
-
-        if (queue->getQueueSIze() == 0) {
-            if (!mPlaystatus->load) {
+        if(mPlaystatus->seek)
+        {
+            av_usleep(1000*100);
+            continue;
+        }
+        if (queue->getQueueSIze() == 0)
+        {
+            if (!mPlaystatus->load)
+            {
                 mPlaystatus->load = true;
                 callJava->onCallLoad(CHILD_THREAD, true);
             }
+            av_usleep(1000*100);
             continue;
         } else {
 
@@ -411,6 +419,8 @@ void MAudio::release() {
         pcmplayer = NULL;
         slPlayItf = NULL;
         pcmBufferQueue = NULL;
+        slMuteSoloItf = NULL;
+        slVolumeItf = NULL;
     }
 
     /*1释放混音器*/
@@ -435,6 +445,21 @@ void MAudio::release() {
         buffer = NULL;
     }
 
+    if(outbuffer!=NULL)
+    {
+        outbuffer=NULL;
+    }
+    if(soundTouch==NULL)
+    {
+        delete(soundTouch);
+        soundTouch=NULL;
+    }
+
+    if(samplebuffer!=NULL)
+    {
+        free(samplebuffer);//释放malloc的空间
+        samplebuffer=NULL;
+    }
     if(avCodecCtx != NULL)
     {
         avcodec_close(avCodecCtx);
