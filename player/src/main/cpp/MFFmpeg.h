@@ -69,6 +69,8 @@ public:
     int getSamplerate();
 
     void setRecordStatus(bool start);
+
+    bool cutAudio(int start,int end, bool returnPcm);
 };
 
 

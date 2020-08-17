@@ -26,6 +26,9 @@ public:
     jmethodID jmid_error;
     jmethodID jmid_db;
     jmethodID jmid_callpcmtoaac;
+    jmethodID jmid_callcomplete;
+    jmethodID jmid_retpcm;
+    jmethodID jmid_retpcmRate;
 public:
     MCallJava(JavaVM *javaVM, JNIEnv *env, jobject *obj);
 
@@ -43,6 +46,11 @@ public:
 
     void onCallPcmToAAC(int type, int size, void *buffer);
 
+    void onCallComplete(int type);
+
+    void onCallPcmInfo(void *buffer, int size);
+
+    void onCallPcmRate(int samplerate);
 };
 
 

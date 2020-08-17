@@ -34,6 +34,9 @@ MCallJava::MCallJava(JavaVM *javaVM, JNIEnv *env, jobject *obj) {
     jmid_error = env->GetMethodID(jlz,"onCallError","(ILjava/lang/String;)V");
     jmid_db = env->GetMethodID(jlz,"onCallValueDB","(I)V");
     jmid_callpcmtoaac = env->GetMethodID(jlz,"encodePcmToAAC","(I[B)V");
+    jmid_callcomplete = env->GetMethodID(jlz,"onCallComplete","()V");
+    jmid_retpcm = env->GetMethodID(jlz,"onCallPcmInfo","([BI)V");
+    jmid_retpcmRate = env->GetMethodID(jlz,"onCallPcmRate","(I)V");
 }
 
 MCallJava::~MCallJava() {
@@ -223,5 +226,58 @@ void MCallJava::onCallPcmToAAC(int type, int size, void *buffer) {
         //销毁防止内存泄漏
         jniEnv->DeleteLocalRef(jbuffer);
     }
+
+}
+
+void MCallJava::onCallComplete(int type) {
+    if (type == MAIN_THREAD) {
+
+        jniEnv->CallVoidMethod(jobj, jmid_callcomplete);
+
+    } else if (type == CHILD_THREAD) {
+        JNIEnv *jniEnv;
+        if (javaVM->AttachCurrentThread(&jniEnv, 0) != JNI_OK) {
+            if (LOG_DEBUG) {
+                LOGE("GET CHILD THREAD");
+                return;
+            }
+        }
+
+        jniEnv->CallVoidMethod(jobj, jmid_callcomplete);
+        javaVM->DetachCurrentThread();
+    }
+}
+
+void MCallJava::onCallPcmInfo(void *buffer, int size) {
+    //将buffer转为jbytearray传给java
+    JNIEnv *jniEnv;
+    if (javaVM->AttachCurrentThread(&jniEnv, 0) != JNI_OK)
+    {
+        //将C++层的buffer转换成jbyte array，传给java层
+        jbyteArray jbuffer = jniEnv->NewByteArray(size);
+        //填充数据
+        jniEnv->SetByteArrayRegion(jbuffer, 0, size, static_cast<const jbyte *>(buffer));
+
+        //
+        jniEnv->CallVoidMethod(jobj, jmid_retpcm, size, jbuffer, size);
+
+        //销毁防止内存泄漏
+        jniEnv->DeleteLocalRef(jbuffer);
+    }
+}
+
+/**
+ * 返回采样率
+ * @param samplerate
+ */
+void MCallJava::onCallPcmRate(int samplerate) {
+    JNIEnv *jniEnv;
+    if (javaVM->AttachCurrentThread(&jniEnv, 0) != JNI_OK)
+    {
+        return;
+    }
+
+    jniEnv->CallVoidMethod(jobj, jmid_retpcmRate,samplerate);
+    javaVM->DetachCurrentThread();
 
 }

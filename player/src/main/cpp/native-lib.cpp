@@ -174,4 +174,12 @@ Java_com_lzm_player_myplayer_Mplayer_n_1record(JNIEnv *env, jobject thiz, jboole
     if (mfFmpeg != NULL) {
          mfFmpeg->setRecordStatus(start);
     }
+}extern "C"
+JNIEXPORT jboolean JNICALL
+Java_com_lzm_player_myplayer_Mplayer_n_1cutaudio(JNIEnv *env, jobject thiz, jint start_time,
+                                                 jint end_time, jboolean returnpcm) {
+    if (mfFmpeg != NULL) {
+        return mfFmpeg->cutAudio(start_time,end_time,returnpcm );
+    }
+    return false;
 }

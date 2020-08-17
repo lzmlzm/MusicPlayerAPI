@@ -9,6 +9,10 @@ MAudio::MAudio(MPlaystatus *mPlaystatus, int samplerate, MCallJava *CallJava) {
     this->callJava = CallJava;
     this->mPlaystatus = mPlaystatus;
     this->sample_rate = samplerate;
+    this->isCut = false;
+    this->end_time = 0;
+    this->returnPcm = false;
+
     queue = new MQueue(mPlaystatus);
     buffer = static_cast<uint8_t *>(av_malloc(sample_rate * 2 * 2));
 
@@ -214,11 +218,11 @@ void pcmBufferCallBack(SLAndroidSimpleBufferQueueItf bf, void *context) {
     {
         //重采样获得PCM buffer数据和大小
         //resampleAudio将解码出来的数据写入buffer->sountouch
-        int buffersize = mAudio->getSoundTouchdata();
-        if (buffersize > 0)
+        int samplebufferSize = mAudio->getSoundTouchdata();
+        if (samplebufferSize > 0)
         {
             //设置播放时长：PCM时间数据大小/每秒理论PCM大小
-            mAudio->clock += buffersize / ((double) (mAudio->sample_rate * 2 * 2));
+            mAudio->clock += samplebufferSize / ((double) (mAudio->sample_rate * 2 * 2));
 
             if (mAudio->clock - mAudio->last_time >= 0.1) {
                 mAudio->last_time = mAudio->clock;
@@ -230,14 +234,27 @@ void pcmBufferCallBack(SLAndroidSimpleBufferQueueItf bf, void *context) {
             if(mAudio->isRecordpcm)
             {
                 //将pcm buffer传给java处理为aac
-                mAudio->callJava->onCallPcmToAAC(CHILD_THREAD,buffersize*4,mAudio->samplebuffer);
+                mAudio->callJava->onCallPcmToAAC(CHILD_THREAD, samplebufferSize * 4, mAudio->samplebuffer);
             }
 
             //回调分贝值给JAVA
             mAudio->callJava->onCallValueDB(CHILD_THREAD,
-                    mAudio->getPcmdb(reinterpret_cast<char *>(mAudio->samplebuffer), buffersize * 4));
+                    mAudio->getPcmdb(reinterpret_cast<char *>(mAudio->samplebuffer), samplebufferSize * 4));
             //将重采样的soundtouch处理的pcm buffer数据入队
-            (*mAudio->pcmBufferQueue)->Enqueue(mAudio->pcmBufferQueue,(char *)mAudio->samplebuffer,buffersize*2*2);
+            (*mAudio->pcmBufferQueue)->Enqueue(mAudio->pcmBufferQueue,(char *)mAudio->samplebuffer,samplebufferSize*4);
+            if(mAudio->isCut)
+            {
+                //若需要返回pcm
+                if(mAudio->returnPcm)
+                {
+                    mAudio->callJava->onCallPcmInfo(mAudio->samplebuffer, samplebufferSize * 2 * 2);
+                }
+                //裁剪超过总长度退出
+                if(mAudio->clock > mAudio->end_time)
+                {
+                    mAudio->mPlaystatus->exit=true;
+                }
+            }
         }
 
 
@@ -669,5 +686,17 @@ int MAudio::getPcmdb(char *pcmdata, size_t pcmsize) {
  */
 void MAudio::setRecordStatus(bool flags) {
     this->isRecordpcm = flags;
+}
+
+
+/**
+ * audio层音频裁剪
+ * @param start
+ * @param end
+ * @param returnPcm
+ * @return
+ */
+bool MAudio::cutAudio(int start, int end, bool returnPcm) {
+    return false;
 }
 

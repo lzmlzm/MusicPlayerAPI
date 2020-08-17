@@ -36,6 +36,7 @@ import com.lzm.player.TimeInfo;
 import com.lzm.player.listener.MOnErrorListener;
 import com.lzm.player.listener.MOnLoadListener;
 import com.lzm.player.listener.MOnPauseResumeListener;
+import com.lzm.player.listener.MOnPcmInfoListener;
 import com.lzm.player.listener.MOnPreparedListener;
 import com.lzm.player.listener.MOnRecordTimeListener;
 import com.lzm.player.listener.MOnTimeInfoListener;
@@ -160,7 +161,17 @@ public class MainActivity extends AppCompatActivity {
                 mylog.d("record time is"+recordTime);
             }
         });
+        mplayer.setmOnPcmInfoListener(new MOnPcmInfoListener() {
+            @Override
+            public void onPcmInfo(byte[] retPcmBuffer, int retPcmBufferSize) {
+                mylog.d("retPcmBufferSize is"+retPcmBufferSize);
+            }
 
+            @Override
+            public void onPcmRate(int samplerate,int bit, int channels) {
+                mylog.d("samplerate is"+samplerate);
+            }
+        });
         //音量seek
         volume_seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override

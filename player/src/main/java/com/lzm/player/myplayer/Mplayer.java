@@ -1,9 +1,11 @@
 package com.lzm.player.myplayer;
 
 import com.lzm.player.TimeInfo;
+import com.lzm.player.listener.MOnCompleteListener;
 import com.lzm.player.listener.MOnErrorListener;
 import com.lzm.player.listener.MOnLoadListener;
 import com.lzm.player.listener.MOnPauseResumeListener;
+import com.lzm.player.listener.MOnPcmInfoListener;
 import com.lzm.player.listener.MOnPreparedListener;
 import com.lzm.player.listener.MOnRecordTimeListener;
 import com.lzm.player.listener.MOnTimeInfoListener;
@@ -11,7 +13,6 @@ import com.lzm.player.listener.MOnValueDBListener;
 import com.lzm.player.log.mylog;
 import com.lzm.player.muteenum.MuteEnum;
 
-import android.bluetooth.le.ScanSettings;
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
@@ -54,7 +55,8 @@ public class Mplayer {
     private MOnErrorListener mOnErrorListener; //出错接口
     private MOnValueDBListener mOnValueDBListener;//pcm 分贝接口
     private MOnRecordTimeListener mOnRecordTimeListener;//录音时间接口
-
+    private MOnCompleteListener mOnCompleteListener;
+    private MOnPcmInfoListener mOnPcmInfoListener;
 
     public  Mplayer(){}
 
@@ -265,6 +267,22 @@ public class Mplayer {
     }
 
     /**
+     * 完成监听
+     * @param mOnCompleteListener
+     */
+    public void setmOnCompleteListener(MOnCompleteListener mOnCompleteListener) {
+        this.mOnCompleteListener = mOnCompleteListener;
+    }
+
+    /**
+     * PCM返回监听
+     * @param mOnPcmInfoListener
+     */
+    public void setmOnPcmInfoListener(MOnPcmInfoListener mOnPcmInfoListener) {
+        this.mOnPcmInfoListener = mOnPcmInfoListener;
+    }
+
+    /**
      * 资源准备回调
      */
     public void onCallPrepared()
@@ -343,8 +361,38 @@ public class Mplayer {
         }
     }
 
+    /**
+     * 监听结束状态
+     */
+    public void onCallComplete()
+    {
+        stop();
+        if(mOnCompleteListener==null)
+        {
+            mOnCompleteListener.onCallComplete();
+        }
+    }
 
+    /**
+     * 监听PCM返回回调
+     * @param retPcmBuffer
+     * @param retPcmBufferSize
+     */
+    public void onCallPcmInfo(byte[] retPcmBuffer, int retPcmBufferSize)
+    {
+        if(mOnPcmInfoListener!=null)
+        {
+            mOnPcmInfoListener.onPcmInfo(retPcmBuffer,retPcmBufferSize);
+        }
+    }
 
+    public void onCallPcmRate(int samplerate)
+    {
+        if(mOnPcmInfoListener!=null)
+        {
+            mOnPcmInfoListener.onPcmRate(samplerate,16,2);
+        }
+    }
     /**
      * 开始录音
      * @param outfile
@@ -395,12 +443,31 @@ public class Mplayer {
     }
 
     /**
+     * 音频裁减
+     * @param starttime
+     * @param endtime
+     * @param returnPcm
+     */
+    public void cutAudio(int starttime,int endtime ,boolean returnPcm)
+    {
+        if(n_cutaudio(starttime,endtime,returnPcm))
+        {
+            start();
+        }else
+        {
+            stop();
+            onCallError(2001,"cutaudio error!");
+        }
+    }
+
+    /**
      * 继续录音
      */
     public void resumeRecord()
     {
         n_record(true);
     }
+
     /**
      * 设置音调
      * @param pitch
@@ -445,6 +512,8 @@ public class Mplayer {
     private native int n_samplerate();
 
     private native void n_record(boolean start);
+
+    private native  boolean n_cutaudio(int start_time,int end_time,boolean returnpcm);
 
     //mediacodec参数设置
     private MediaFormat encoderFormat = null;

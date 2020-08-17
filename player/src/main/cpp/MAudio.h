@@ -55,6 +55,10 @@ public:
     bool isRecordpcm = false;
     bool ReadAvFrame = true;
 
+    //音频采集
+    bool isCut = false;
+    int end_time = 0;
+    bool returnPcm = false;
     //OpenSLES
     //定义引擎接口
     SLObjectItf engineObjectItf = NULL;
@@ -118,7 +122,7 @@ public:
 
     void setRecordStatus(bool flags);
 
-
+    bool cutAudio(int start,int end, bool returnPcm);
 
 };
 

@@ -102,7 +102,8 @@ void MFFmpeg::decodeFFmpegThread() {
                 audio->duration = pFormatCtx->duration / AV_TIME_BASE;//计算时间
                 audio->time_base = pFormatCtx->streams[i]->time_base;
                 duration = audio->duration;
-
+                //回调pcm samplerate
+                callJava->onCallPcmRate(audio->sample_rate);
             }
         }
     }
@@ -195,8 +196,8 @@ void MFFmpeg::start() {
             av_usleep(1000*100);
             continue;
         }
-        //缓存100个包
-        if(audio->queue->getQueueSIze() > 50)
+        //缓存30个包
+        if(audio->queue->getQueueSIze() > 30)
         {
             av_usleep(1000*100);
             continue;//存40帧再处理数据
@@ -247,7 +248,6 @@ void MFFmpeg::start() {
         }
     }
 
-    exit = true;
     //？？？待注释
     while(audio->queue->getQueueSIze() > 0) {
         AVPacket *avPacket = av_packet_alloc();
@@ -257,14 +257,11 @@ void MFFmpeg::start() {
         avPacket = NULL;
     }
 
-
-    if(LOG_DEBUG)
+    if(callJava!=NULL)
     {
-        LOGD("OK!");
+        callJava->onCallComplete(CHILD_THREAD);
     }
-
-
-
+    exit = true;
 }
 
 /**
@@ -444,4 +441,24 @@ void MFFmpeg::setRecordStatus(bool start) {
     {
         audio->setRecordStatus(start);
     }
+}
+/**
+ * ffmpeg音频裁剪
+ * @param start
+ * @param end
+ * @param returnPcm 是否返回pcm数据给java
+ * @return
+ */
+bool MFFmpeg::cutAudio(int start, int end, bool returnPcm) {
+    //限制时间范围
+    if(start >= 0 && end <= duration && start < end)
+    {
+        audio->isCut = true;
+        audio->end_time = end;
+        audio->returnPcm = returnPcm;
+        //先seek到开始时间
+        seek(start);
+        return true;
+    }
+    return false;
 }
