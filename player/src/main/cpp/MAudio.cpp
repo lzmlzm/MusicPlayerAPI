@@ -286,11 +286,11 @@ void MAudio::initOpenSLES() {
     SLDataSink audioSink = {&outputMix,NULL,};
 
     //必须加上SL_IID_VOLUME ID否则无法控制音量
-    const SLInterfaceID ids[3]={SL_IID_BUFFERQUEUE,SL_IID_VOLUME,SL_IID_MUTESOLO};
+    const SLInterfaceID ids[4]={SL_IID_BUFFERQUEUE,SL_IID_VOLUME,SL_IID_MUTESOLO,SL_IID_PLAYBACKRATE};
 
-    const SLboolean req[3] = {SL_BOOLEAN_TRUE,SL_BOOLEAN_TRUE,SL_BOOLEAN_TRUE};
+    const SLboolean req[4] = {SL_BOOLEAN_TRUE,SL_BOOLEAN_TRUE,SL_BOOLEAN_TRUE,SL_BOOLEAN_TRUE};
 
-    (*engineEngine)->CreateAudioPlayer(engineEngine,&pcmplayer,&slDataSource, &audioSink,3,ids,req);
+    (*engineEngine)->CreateAudioPlayer(engineEngine,&pcmplayer,&slDataSource, &audioSink,4,ids,req);
 
     (*pcmplayer)->Realize(pcmplayer,SL_BOOLEAN_FALSE);
 

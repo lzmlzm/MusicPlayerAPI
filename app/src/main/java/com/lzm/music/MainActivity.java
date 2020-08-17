@@ -37,6 +37,7 @@ import com.lzm.player.listener.MOnErrorListener;
 import com.lzm.player.listener.MOnLoadListener;
 import com.lzm.player.listener.MOnPauseResumeListener;
 import com.lzm.player.listener.MOnPreparedListener;
+import com.lzm.player.listener.MOnRecordTimeListener;
 import com.lzm.player.listener.MOnTimeInfoListener;
 import com.lzm.player.listener.MOnValueDBListener;
 import com.lzm.player.muteenum.MuteEnum;
@@ -148,9 +149,15 @@ public class MainActivity extends AppCompatActivity {
         mplayer.setmOnValueDBListener(new MOnValueDBListener() {
             @Override
             public void onDbValue(int db) {
-
                 //打印底层回调上来的db
                 mylog.d("db is %d" + db);
+            }
+        });
+        //录音时间回调
+        mplayer.setmOnRecordTimeListener(new MOnRecordTimeListener() {
+            @Override
+            public void onRecordTime(double recordTime) {
+                mylog.d("record time is"+recordTime);
             }
         });
 

@@ -5,6 +5,7 @@ import com.lzm.player.listener.MOnErrorListener;
 import com.lzm.player.listener.MOnLoadListener;
 import com.lzm.player.listener.MOnPauseResumeListener;
 import com.lzm.player.listener.MOnPreparedListener;
+import com.lzm.player.listener.MOnRecordTimeListener;
 import com.lzm.player.listener.MOnTimeInfoListener;
 import com.lzm.player.listener.MOnValueDBListener;
 import com.lzm.player.log.mylog;
@@ -52,6 +53,7 @@ public class Mplayer {
     private TimeInfo mtimeInfo;
     private MOnErrorListener mOnErrorListener; //出错接口
     private MOnValueDBListener mOnValueDBListener;//pcm 分贝接口
+    private MOnRecordTimeListener mOnRecordTimeListener;//录音时间接口
 
 
     public  Mplayer(){}
@@ -255,6 +257,14 @@ public class Mplayer {
     }
 
     /**
+     * 录音时间监听
+     * @param mOnRecordTimeListener
+     */
+    public void setmOnRecordTimeListener(MOnRecordTimeListener mOnRecordTimeListener){
+        this.mOnRecordTimeListener = mOnRecordTimeListener;
+    }
+
+    /**
      * 资源准备回调
      */
     public void onCallPrepared()
@@ -344,10 +354,12 @@ public class Mplayer {
         //初始化mediacodec
         if(!initMediacodec)
         {
-            if(n_samplerate()>0)
+            //获取采样率
+            audioSamplerate = n_samplerate();
+            if(audioSamplerate>0)
             {
                 initMediacodec = true;
-                initMediaCodec(n_samplerate(),outfile);
+                initMediaCodec(audioSamplerate,outfile);
                 n_record(true);
             }
         }
@@ -443,7 +455,8 @@ public class Mplayer {
     private int everypcmsize = 0;
     private byte[] outbytebuffer = null;
     private int aac_samplerate = 4;//代表44100采样率
-
+    private double recordTime = 0;//录音时间
+    private int audioSamplerate = 0;
 
     /**
      * mediacodec初始化
@@ -481,6 +494,9 @@ public class Mplayer {
             //初始化输出流
             outputStream=new FileOutputStream(outfile);
 
+            //录音时间置0
+            recordTime = 0;
+
             mediaCodec.start();
 
         }catch (IOException e){
@@ -498,8 +514,9 @@ public class Mplayer {
             return;
         }
         outputStream.close();
-        outputStream=null;
+        outputStream = null;
 
+        recordTime = 0;
         mediaCodec.stop();
         mediaCodec.release();
         mediaCodec = null;
@@ -515,7 +532,14 @@ public class Mplayer {
      * @param buffer
      */
     private void encodePcmToAAC(int size,byte[] buffer) throws IOException {
-        if(buffer!=null && mediaCodec!=null){
+        if(buffer!=null && mediaCodec!=null)
+        {
+            recordTime += size*1.0f/(audioSamplerate*2*2);//两通道，16bit/8bit，8bit一个字节
+            if(mOnRecordTimeListener!=null)
+            {
+                mOnRecordTimeListener.onRecordTime(recordTime);
+            }
+
             //从队列里得到当前可用buffer空间的索引
             int inputBufferindex = mediaCodec.dequeueInputBuffer(0);
             if (inputBufferindex > 0)
