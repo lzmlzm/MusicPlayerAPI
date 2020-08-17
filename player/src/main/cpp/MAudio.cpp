@@ -2,7 +2,6 @@
 // Created by lzm on 19-2-20.
 //
 
-#include <libavutil/time.h>
 #include "MAudio.h"
 
 MAudio::MAudio(MPlaystatus *mPlaystatus, int samplerate, MCallJava *CallJava) {
@@ -87,27 +86,34 @@ int MAudio::resampleAudio(void **pcmbuffer) {
             }
         }
 
-        avPacket = av_packet_alloc();//分配空间
-        if(queue->outAvpacket(avPacket) != 0)
+        if(ReadAvFrame)
         {
-            av_packet_free(&avPacket);
-            av_free(avPacket);
-            avPacket = NULL;//释放内存
-            continue;
+            avPacket = av_packet_alloc();//分配空间
+            if(queue->outAvpacket(avPacket) != 0)
+            {
+                av_packet_free(&avPacket);
+                av_free(avPacket);
+                avPacket = NULL;//释放内存
+                continue;
+            }
+
+            ret = avcodec_send_packet(avCodecCtx,avPacket);//将PACKET放到解码器进行解码
+            if(ret != 0)
+            {
+                av_packet_free(&avPacket);
+                av_free(avPacket);
+                avPacket = NULL;//释放内存
+                continue;
+            }
+
         }
 
-        ret = avcodec_send_packet(avCodecCtx,avPacket);//将PACKET放到解码器进行解码
-        if(ret != 0)
-        {
-            av_packet_free(&avPacket);
-            av_free(avPacket);
-            avPacket = NULL;//释放内存
-            continue;
-        }
         avFrame = av_frame_alloc();
         ret = avcodec_receive_frame(avCodecCtx,avFrame);//接受数据
         if(ret == 0)
         {
+            //AVPACKET里的frame未全部读取结束
+            ReadAvFrame = false;
             //success
             //对声音进行重采样
             if(avFrame->channels>0 && avFrame->channel_layout==0)
@@ -139,6 +145,7 @@ int MAudio::resampleAudio(void **pcmbuffer) {
                 av_frame_free(&avFrame);
                 av_free(avFrame);
                 avFrame = NULL;
+                ReadAvFrame = true;
                 if(swr_ctx != NULL)
                 {
                     swr_free(&swr_ctx);
@@ -182,9 +189,7 @@ int MAudio::resampleAudio(void **pcmbuffer) {
             break;
 
         }else{
-            av_packet_free(&avPacket);
-            av_free(avPacket);
-            avPacket = NULL;//释放内存
+            ReadAvFrame = true;
             av_frame_free(&avFrame);
             av_free(avFrame);
             avFrame = NULL;

@@ -195,8 +195,8 @@ void MFFmpeg::start() {
             av_usleep(1000*100);
             continue;
         }
-
-        if(audio->queue->getQueueSIze() > 100)
+        //缓存100个包
+        if(audio->queue->getQueueSIze() > 50)
         {
             av_usleep(1000*100);
             continue;//存40帧再处理数据
@@ -363,6 +363,9 @@ void MFFmpeg::seek(int64_t secs) {
             pthread_mutex_lock(&seek_mutex);
 
             int64_t rel = secs*AV_TIME_BASE;
+
+            //清除seek时残余的前几帧
+            avcodec_flush_buffers(audio->avCodecCtx);
             //
             avformat_seek_file(pFormatCtx,-1,INT64_MIN,rel,INT64_MAX,0);
 

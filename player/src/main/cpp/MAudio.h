@@ -16,6 +16,7 @@ extern"C"
 {
 #include <libavcodec/avcodec.h>
 #include <libswresample/swresample.h>
+#include <libavutil/time.h>
 };
 class MAudio {
 
@@ -52,6 +53,7 @@ public:
     int speed = 1;
 
     bool isRecordpcm = false;
+    bool ReadAvFrame = true;
 
     //OpenSLES
     //定义引擎接口
