@@ -545,6 +545,7 @@ public class Mplayer {
             //LC头部信息里
             encoderFormat.setInteger(MediaFormat.KEY_AAC_PROFILE,MediaCodecInfo.CodecProfileLevel.AACObjectLC);
 
+            //限制每一个buffersize的大小
             encoderFormat.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE,4096);
 
             //创建音频编码器
@@ -601,6 +602,9 @@ public class Mplayer {
      * @param buffer
      */
     private void encodePcmToAAC(int size,byte[] buffer) throws IOException {
+
+        mylog.d("buffer size is "+size);
+        
         if(buffer!=null && mediaCodec!=null)
         {
             recordTime += size*1.0f/(audioSamplerate*2*2);//两通道，16bit/8bit，8bit一个字节

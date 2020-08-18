@@ -49,12 +49,107 @@ void *decodeplay(void *data)
 }
 
 /**
+ * pcm数据分包线程函数
+ * @param data
+ * @return
+ */
+void *pcmSplitCallback(void *data)
+{
+    MAudio *mAudio = static_cast<MAudio *>(data);
+
+    mAudio->mBufferQueue = new MBufferQueue(mAudio->mPlaystatus);
+
+    //系统状态判断
+    while (mAudio->mPlaystatus!= NULL && !mAudio->mPlaystatus->exit)
+    {
+        MPcmBean *mPcmBean=NULL;
+        //数据出队处理
+        mAudio->mBufferQueue->getBuffer(&mPcmBean);
+        if(mPcmBean==NULL)
+        {
+            av_usleep(1000*100);
+            continue;
+        }
+        LOGD("pcmbean buffer size is %d",mPcmBean->buffsize);
+        //传入的pcm的实际数据包小于默认的大小，不分包
+        if(mPcmBean->buffsize <= mAudio->defaultPcmSize)
+        {
+            //根据录音状态处理pcm
+           if(mAudio->isRecordpcm)
+           {
+               //将pcm buffer传给java处理为aac
+               mAudio->callJava->onCallPcmToAAC(CHILD_THREAD, mPcmBean->buffsize,mPcmBean->buffer);
+           }
+             //若需要返回pcm
+             if(mAudio->returnPcm)
+             {
+                 mAudio->callJava->onCallPcmInfo(mPcmBean->buffer, mPcmBean->buffsize);
+             }
+        } else
+        {
+            //需要分包的数量整数部分
+            int pack_num = mPcmBean->buffsize / mAudio->defaultPcmSize;
+            //分包剩下的部分
+            int pack_sub = mPcmBean->buffsize % mAudio->defaultPcmSize;
+
+            for(int i = 0;i<pack_num; i++)
+            {
+                char *buffer = static_cast<char *>(malloc(mAudio->defaultPcmSize));
+                //内存拷贝
+                memcpy(buffer,mPcmBean->buffer + i * mAudio->defaultPcmSize, mAudio->defaultPcmSize);
+                //根据录音状态处理pcm
+                if(mAudio->isRecordpcm)
+                {
+                    //将pcm buffer传给java处理为aac
+                    mAudio->callJava->onCallPcmToAAC(CHILD_THREAD, mAudio->defaultPcmSize,buffer);
+                }
+                //若需要返回pcm
+                if(mAudio->returnPcm)
+                {
+                    mAudio->callJava->onCallPcmInfo(buffer, mAudio->defaultPcmSize);
+                }
+                free(buffer);
+                buffer = NULL;
+            }
+
+            //余数操作
+            if(pack_sub > 0)
+            {
+                char *buffer = static_cast<char *>(malloc(pack_sub));//大小为余数大小，一次性操作余数
+                //内存拷贝
+                memcpy(buffer,mPcmBean->buffer + pack_num * mAudio->defaultPcmSize, pack_sub);
+                //根据录音状态处理pcm
+                if(mAudio->isRecordpcm)
+                {
+                    //将pcm buffer传给java处理为aac
+                    mAudio->callJava->onCallPcmToAAC(CHILD_THREAD, pack_sub,buffer);
+                }
+                //若需要返回pcm
+                if(mAudio->returnPcm)
+                {
+                    mAudio->callJava->onCallPcmInfo(buffer, pack_sub);
+                }
+                free(buffer);
+                buffer = NULL;
+            }
+        }
+        delete(mPcmBean);
+        mPcmBean = NULL;
+    }
+
+    pthread_exit(&mAudio->pcm_callbackThread);
+
+}
+
+/**
  * 开启播放线程
  */
 void MAudio::play() {
 
     //创建音频播放器线程
     pthread_create(&pthread_play, NULL, decodeplay, this);
+    //pcm数据分包线程
+    pthread_create(&pcm_callbackThread,NULL, pcmSplitCallback,this);
 
 }
 
@@ -230,12 +325,8 @@ void pcmBufferCallBack(SLAndroidSimpleBufferQueueItf bf, void *context) {
                 mAudio->callJava->onCallTimeInfo(CHILD_THREAD, mAudio->clock, mAudio->duration);
             }
 
-            //根据录音状态处理pcm
-            if(mAudio->isRecordpcm)
-            {
-                //将pcm buffer传给java处理为aac
-                mAudio->callJava->onCallPcmToAAC(CHILD_THREAD, samplebufferSize * 4, mAudio->samplebuffer);
-            }
+            //将pcm数据放入bufferqueue
+            mAudio->mBufferQueue->putBuffer(mAudio->samplebuffer,samplebufferSize*4);
 
             //回调分贝值给JAVA
             mAudio->callJava->onCallValueDB(CHILD_THREAD,
@@ -244,11 +335,7 @@ void pcmBufferCallBack(SLAndroidSimpleBufferQueueItf bf, void *context) {
             (*mAudio->pcmBufferQueue)->Enqueue(mAudio->pcmBufferQueue,(char *)mAudio->samplebuffer,samplebufferSize*4);
             if(mAudio->isCut)
             {
-                //若需要返回pcm
-                if(mAudio->returnPcm)
-                {
-                    mAudio->callJava->onCallPcmInfo(mAudio->samplebuffer, samplebufferSize * 2 * 2);
-                }
+
                 //裁剪超过总长度退出
                 if(mAudio->clock > mAudio->end_time)
                 {
@@ -428,6 +515,14 @@ void MAudio::stop() {
 void MAudio::release() {
 
     stop();
+    if (mBufferQueue!=NULL)
+    {
+        mBufferQueue->noticeThread();
+        pthread_join(pcm_callbackThread,NULL);
+        mBufferQueue->noticeThread();
+        delete(mBufferQueue);
+        mBufferQueue=NULL;
+    }
     if(queue != NULL)
     {
         delete(queue);

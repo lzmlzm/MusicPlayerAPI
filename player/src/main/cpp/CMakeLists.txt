@@ -29,6 +29,8 @@ add_library(
         MFFmpeg.cpp
         MQueue.cpp
         MPlaystatus.cpp
+        MPcmBean.cpp
+        MBufferQueue.cpp
         SoundTouch/AAFilter.cpp
         SoundTouch/SoundTouch.cpp
         SoundTouch/FIFOSampleBuffer.cpp

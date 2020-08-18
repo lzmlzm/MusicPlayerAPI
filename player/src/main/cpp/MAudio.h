@@ -11,6 +11,7 @@
 #include <SLES/OpenSLES.h>
 #include <SLES/OpenSLES_Android.h>
 #include "SoundTouch.h"
+#include "MBufferQueue.h"
 using namespace soundtouch;
 extern"C"
 {
@@ -84,6 +85,14 @@ public:
 
     SoundTouch *soundTouch = NULL;
     SAMPLETYPE *samplebuffer = NULL;
+
+    //pcm数据分包
+    pthread_t pcm_callbackThread;
+    //分包后的队列
+    MBufferQueue *mBufferQueue;
+
+    //默认pcm数据包的大小4096
+    int defaultPcmSize = 4096;
 
 
 
