@@ -49,6 +49,12 @@
 
 {
   "directory": "C:/Users/nxf65025/AndroidStudioProjects/VideoAPP/player/.cxx/cmake/debug/arm64-v8a",
+  "command": "C:\\Users\\nxf65025\\AppData\\Local\\Android\\Sdk\\ndk\\21.0.6113669\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\clang++.exe --target=aarch64-none-linux-android28 --gcc-toolchain=C:/Users/nxf65025/AppData/Local/Android/Sdk/ndk/21.0.6113669/toolchains/llvm/prebuilt/windows-x86_64 --sysroot=C:/Users/nxf65025/AppData/Local/Android/Sdk/ndk/21.0.6113669/toolchains/llvm/prebuilt/windows-x86_64/sysroot  -Dnative_lib_EXPORTS -IC:/Users/nxf65025/AndroidStudioProjects/VideoAPP/player/src/main/cpp/include  -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -frtti -fexceptions -std=c++11 -O0 -fno-limit-debug-info  -fPIC   -o CMakeFiles\\native-lib.dir\\MVideo.cpp.o -c C:\\Users\\nxf65025\\AndroidStudioProjects\\VideoAPP\\player\\src\\main\\cpp\\MVideo.cpp",
+  "file": "C:\\Users\\nxf65025\\AndroidStudioProjects\\VideoAPP\\player\\src\\main\\cpp\\MVideo.cpp"
+},
+
+{
+  "directory": "C:/Users/nxf65025/AndroidStudioProjects/VideoAPP/player/.cxx/cmake/debug/arm64-v8a",
   "command": "C:\\Users\\nxf65025\\AppData\\Local\\Android\\Sdk\\ndk\\21.0.6113669\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\clang++.exe --target=aarch64-none-linux-android28 --gcc-toolchain=C:/Users/nxf65025/AppData/Local/Android/Sdk/ndk/21.0.6113669/toolchains/llvm/prebuilt/windows-x86_64 --sysroot=C:/Users/nxf65025/AppData/Local/Android/Sdk/ndk/21.0.6113669/toolchains/llvm/prebuilt/windows-x86_64/sysroot  -Dnative_lib_EXPORTS -IC:/Users/nxf65025/AndroidStudioProjects/VideoAPP/player/src/main/cpp/include  -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -frtti -fexceptions -std=c++11 -O0 -fno-limit-debug-info  -fPIC   -o CMakeFiles\\native-lib.dir\\SoundTouch\\AAFilter.cpp.o -c C:\\Users\\nxf65025\\AndroidStudioProjects\\VideoAPP\\player\\src\\main\\cpp\\SoundTouch\\AAFilter.cpp",
   "file": "C:\\Users\\nxf65025\\AndroidStudioProjects\\VideoAPP\\player\\src\\main\\cpp\\SoundTouch\\AAFilter.cpp"
 },

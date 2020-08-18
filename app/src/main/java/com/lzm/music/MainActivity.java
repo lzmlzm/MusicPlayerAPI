@@ -225,7 +225,7 @@ public class MainActivity extends AppCompatActivity {
     }
     //开始播放按下
     public void begin(View view) {
-        mplayer.setSource(Environment.getExternalStorageDirectory()+"/test.mp3");
+        mplayer.setSource(Environment.getExternalStorageDirectory()+"/test.mp4");
         //准备数据并投喂给队列
         mplayer.prepared();
     }

@@ -6,8 +6,8 @@
 
 MQueue::MQueue(MPlaystatus *mPlaystatus) {
 
-    this->playstatus = mPlaystatus;
     pthread_mutex_init(&mutexPacket,NULL);
+    this->playstatus = mPlaystatus;
     pthread_cond_init(&condPacket,NULL);
 
 }

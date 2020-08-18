@@ -8,6 +8,7 @@
 #include "MCallJava.h"
 #include "pthread.h"
 #include "MAudio.h"
+#include "MVideo.h"
 
 extern "C"
 {
@@ -28,6 +29,8 @@ public:
     AVFormatContext *pFormatCtx = NULL;//上下文
 
     MAudio *audio = NULL;
+
+    MVideo *mVideo = NULL;
 
     MPlaystatus *mPlaystatus = NULL;
 
@@ -71,6 +74,8 @@ public:
     void setRecordStatus(bool start);
 
     bool cutAudio(int start,int end, bool returnPcm);
+
+    int getCodecContext(AVCodecParameters *avCodecParameters, AVCodecContext **avCodecCtx);
 };
 
 

@@ -90,7 +90,8 @@ void MFFmpeg::decodeFFmpegThread() {
     //获取音频流
     for(int i=0;i < pFormatCtx->nb_streams;i++)
     {
-        if(pFormatCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO)//判断类型是否是AUDIO
+        //获取音频流
+        if(pFormatCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO)
         {
             if(audio == NULL)
             {
@@ -98,6 +99,7 @@ void MFFmpeg::decodeFFmpegThread() {
                 audio = new MAudio(mPlaystatus, pFormatCtx->streams[i]->codecpar->sample_rate,
                                    callJava);
                 audio->streamIndex = i;
+                //设置音频解码器属性
                 audio->codecPar = pFormatCtx->streams[i]->codecpar;
                 audio->duration = pFormatCtx->duration / AV_TIME_BASE;//计算时间
                 audio->time_base = pFormatCtx->streams[i]->time_base;
@@ -106,62 +108,42 @@ void MFFmpeg::decodeFFmpegThread() {
                 callJava->onCallPcmRate(audio->sample_rate);
             }
         }
-    }
-
-    //找到解码器
-
-    AVCodec *avCodec = avcodec_find_decoder(audio->codecPar->codec_id);
-    if(!avCodec)
-    {
-        if(LOG_DEBUG)
+        //获取视频流
+        else if (pFormatCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO)
         {
-            LOGE("CAN NOT FIND DECODER");
-            callJava->onCallError(CHILD_THREAD,1003,"CAN NOT FIND DECODER");
+            if(mVideo == NULL)
+            {
+                mVideo = new MVideo(mPlaystatus,callJava);
+                //设置索引
+                mVideo->streamindex = i;
+                //设置视频解码器属性
+                mVideo->avCodecParameters=pFormatCtx->streams[i]->codecpar;
+                mVideo->time_base = pFormatCtx->streams[i]->time_base;
+            }
         }
-        exit = true;
-        pthread_mutex_unlock(&init_mutex);
-        return;
     }
 
-
-    audio->avCodecCtx = avcodec_alloc_context3(avCodec);
-    if(!audio->avCodecCtx)
+    //获取音频解码器上下文
+    if(audio!=NULL)
     {
-        if(LOG_DEBUG)
-        {
-            LOGE("CAN NOT ALLOC NEW DECODERCTX");
-            callJava->onCallError(CHILD_THREAD,1004,"CAN NOT ALLOC NEW DECODERCTX");
-        }
-        exit = true;
-        pthread_mutex_unlock(&init_mutex);
-        return;
+        getCodecContext(audio->codecPar,&audio->avCodecCtx);
+    }
+    //获取视频解码器上下文
+    if(mVideo!=NULL)
+    {
+        getCodecContext(mVideo->avCodecParameters,&mVideo->avCodecContext);
     }
 
-    if(avcodec_parameters_to_context(audio->avCodecCtx,audio->codecPar) < 0)
+    if(callJava!=NULL)
     {
-        if(LOG_DEBUG)
+        if(mPlaystatus!=NULL &&!mPlaystatus->exit)
         {
-            LOGE("CAN NOT FILL DECODER");
-            callJava->onCallError(CHILD_THREAD,1005,"CAN NOT FILL DECODER");
+            callJava->onCallPrepared(CHILD_THREAD);
+        }else{
+            exit = true;
         }
-        exit = true;
-        pthread_mutex_unlock(&init_mutex);
-        return;
-    }
-    //打开解码器上下文
-    if(avcodec_open2(audio->avCodecCtx,avCodec,0) != 0)
-    {
-        if(LOG_DEBUG)
-        {
-            LOGE("CAN NOT OPEN AUDIO STREAMS");
-            callJava->onCallError(CHILD_THREAD,1006,"CAN NOT OPEN AUDIO STREAMS");
-        }
-        exit = true;
-        pthread_mutex_unlock(&init_mutex);
-        return;
     }
 
-    callJava->onCallPrepared(CHILD_THREAD);
     pthread_mutex_unlock(&init_mutex);
 
 }
@@ -185,9 +167,7 @@ void MFFmpeg::start() {
     //开始从队列接收数据并播放
     //
     audio->play();
-
-    int count;
-
+    mVideo->playVideo();
     //检测播放状态
     while(mPlaystatus !=NULL && !mPlaystatus->exit)
     {
@@ -213,17 +193,18 @@ void MFFmpeg::start() {
         pthread_mutex_unlock(&seek_mutex);
 
         if(ret == 0)
-        {   //读到有效帧数据
+        {   //读到有效帧数据,将avPacket入队
             if(avPacket->stream_index == audio->streamIndex)
             {
-                count++;
-                if(LOG_DEBUG)
-                {
-                    LOGE("DECODE %d FRAME", count);
-                }
-                //将avpacket音频数据放入队列
+                //音频avPacket入队
                 audio->queue->putAvpacket(avPacket);
-            } else{
+            }
+            else if(avPacket->stream_index == mVideo->streamindex)
+            {
+                //视频avPacket入队
+                mVideo->mQueue->putAvpacket(avPacket);
+            }
+            else{
                 av_packet_free(&avPacket);
                 av_free(avPacket);
                 avPacket = NULL;
@@ -314,6 +295,13 @@ void MFFmpeg::release() {
         audio->release();
         delete(audio);
         audio = NULL;
+    }
+    if(mVideo != NULL)
+    {
+
+        mVideo->release();
+        delete(mVideo);
+        mVideo = NULL;
     }
     if(pFormatCtx != NULL)
     {
@@ -462,3 +450,60 @@ bool MFFmpeg::cutAudio(int start, int end, bool returnPcm) {
     }
     return false;
 }
+
+int MFFmpeg::getCodecContext(AVCodecParameters *avCodecParameters, AVCodecContext **avCodecCtx) {
+    //找到解码器
+
+    AVCodec *avCodec = avcodec_find_decoder(avCodecParameters->codec_id);
+    if(!avCodec)
+    {
+        if(LOG_DEBUG)
+        {
+            LOGE("CAN NOT FIND DECODER");
+            callJava->onCallError(CHILD_THREAD,1003,"CAN NOT FIND DECODER");
+        }
+        exit = true;
+        pthread_mutex_unlock(&init_mutex);
+        return -1;
+    }
+
+
+    *avCodecCtx = avcodec_alloc_context3(avCodec);
+    if(!audio->avCodecCtx)
+    {
+        if(LOG_DEBUG)
+        {
+            LOGE("CAN NOT ALLOC NEW DECODERCTX");
+            callJava->onCallError(CHILD_THREAD,1004,"CAN NOT ALLOC NEW DECODERCTX");
+        }
+        exit = true;
+        pthread_mutex_unlock(&init_mutex);
+        return -1;
+    }
+
+    if(avcodec_parameters_to_context(*avCodecCtx,avCodecParameters) < 0)
+    {
+        if(LOG_DEBUG)
+        {
+            LOGE("CAN NOT FILL DECODER");
+            callJava->onCallError(CHILD_THREAD,1005,"CAN NOT FILL DECODER");
+        }
+        exit = true;
+        pthread_mutex_unlock(&init_mutex);
+        return -1;
+    }
+    //打开解码器上下文
+    if(avcodec_open2(*avCodecCtx,avCodec,0) != 0)
+    {
+        if(LOG_DEBUG)
+        {
+            LOGE("CAN NOT OPEN AUDIO STREAMS");
+            callJava->onCallError(CHILD_THREAD,1006,"CAN NOT OPEN AUDIO STREAMS");
+        }
+        exit = true;
+        pthread_mutex_unlock(&init_mutex);
+        return -1;
+    }
+    return 0;
+}
+

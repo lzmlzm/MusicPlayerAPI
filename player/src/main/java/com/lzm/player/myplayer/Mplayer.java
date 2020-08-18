@@ -415,7 +415,7 @@ public class Mplayer {
     }
 
     /**
-     * 停止播放
+     * 停止录音
      */
     public void stopRecord()
     {
@@ -604,7 +604,7 @@ public class Mplayer {
     private void encodePcmToAAC(int size,byte[] buffer) throws IOException {
 
         mylog.d("buffer size is "+size);
-        
+
         if(buffer!=null && mediaCodec!=null)
         {
             recordTime += size*1.0f/(audioSamplerate*2*2);//两通道，16bit/8bit，8bit一个字节
@@ -732,6 +732,5 @@ public class Mplayer {
         }
         return rate;
     }
-
 
 }
