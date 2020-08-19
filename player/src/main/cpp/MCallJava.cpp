@@ -37,6 +37,7 @@ MCallJava::MCallJava(JavaVM *javaVM, JNIEnv *env, jobject *obj) {
     jmid_callcomplete = env->GetMethodID(jlz,"onCallComplete","()V");
     jmid_retpcm = env->GetMethodID(jlz,"onCallPcmInfo","([BI)V");
     jmid_retpcmRate = env->GetMethodID(jlz,"onCallPcmRate","(I)V");
+    jmid_renderyuv = env->GetMethodID(jlz,"onCallRenderYUV","(II[B[B[B)V");
 }
 
 MCallJava::~MCallJava() {
@@ -59,11 +60,7 @@ void MCallJava::onCallPrepared(int type) {
      JNIEnv *jniEnv;
      if(javaVM->AttachCurrentThread(&jniEnv,0)!= JNI_OK)
      {
-         if(LOG_DEBUG)
-         {
-             LOGE("GET CHILD THREAD");
-             return;
-         }
+         return;
      }
 
      jniEnv->CallVoidMethod(jobj,jmid_prepared);
@@ -87,10 +84,7 @@ void MCallJava::onCallLoad(int type, bool load) {
         //子线程必须通过JVM来获取当前线程的Jnienv
         JNIEnv *jniEnv;
         if (javaVM->AttachCurrentThread(&jniEnv, 0) != JNI_OK) {
-            if (LOG_DEBUG) {
-                LOGE("GET CHILD THREAD");
-                return;
-            }
+            return;
         }
 
         //回调load值给java层的onCallLoad
@@ -116,10 +110,7 @@ void MCallJava::onCallTimeInfo(int type, int cur, int total) {
     } else if (type == CHILD_THREAD) {
         JNIEnv *jniEnv;
         if (javaVM->AttachCurrentThread(&jniEnv, 0) != JNI_OK) {
-            if (LOG_DEBUG) {
-                LOGE("GET CHILD THREAD");
-                return;
-            }
+            return;
         }
 
         jniEnv->CallVoidMethod(jobj, jmid_timeinfo, cur, total);
@@ -147,11 +138,7 @@ void MCallJava::onCallError(int type, int code, char *msg) {
         JNIEnv *jniEnv;
         if(javaVM->AttachCurrentThread(&jniEnv,0)!= JNI_OK)
         {
-            if(LOG_DEBUG)
-            {
-                LOGE("GET CHILD THREAD");
-                return;
-            }
+            return;
         }
 
         jstring jmsg = jniEnv->NewStringUTF(msg);
@@ -177,10 +164,7 @@ void MCallJava::onCallValueDB(int type, int db) {
     } else if (type == CHILD_THREAD) {
         JNIEnv *jniEnv;
         if (javaVM->AttachCurrentThread(&jniEnv, 0) != JNI_OK) {
-            if (LOG_DEBUG) {
-                LOGE("GET CHILD THREAD");
-                return;
-            }
+            return;
         }
 
         jniEnv->CallVoidMethod(jobj, jmid_db, db);
@@ -210,10 +194,7 @@ void MCallJava::onCallPcmToAAC(int type, int size, void *buffer) {
     } else if (type == CHILD_THREAD) {
         JNIEnv *jniEnv;
         if (javaVM->AttachCurrentThread(&jniEnv, 0) != JNI_OK) {
-            if (LOG_DEBUG) {
-                LOGE("GET CHILD THREAD");
-                return;
-            }
+            return;
         }
         //将C++层的buffer转换成jbyte array，传给java层
         jbyteArray jbuffer = jniEnv->NewByteArray(size);
@@ -237,10 +218,7 @@ void MCallJava::onCallComplete(int type) {
     } else if (type == CHILD_THREAD) {
         JNIEnv *jniEnv;
         if (javaVM->AttachCurrentThread(&jniEnv, 0) != JNI_OK) {
-            if (LOG_DEBUG) {
-                LOGE("GET CHILD THREAD");
                 return;
-            }
         }
 
         jniEnv->CallVoidMethod(jobj, jmid_callcomplete);
@@ -253,17 +231,22 @@ void MCallJava::onCallPcmInfo(void *buffer, int size) {
     JNIEnv *jniEnv;
     if (javaVM->AttachCurrentThread(&jniEnv, 0) != JNI_OK)
     {
-        //将C++层的buffer转换成jbyte array，传给java层
-        jbyteArray jbuffer = jniEnv->NewByteArray(size);
-        //填充数据
-        jniEnv->SetByteArrayRegion(jbuffer, 0, size, static_cast<const jbyte *>(buffer));
-
-        //
-        jniEnv->CallVoidMethod(jobj, jmid_retpcm, size, jbuffer, size);
-
-        //销毁防止内存泄漏
-        jniEnv->DeleteLocalRef(jbuffer);
+        return;
     }
+
+    //将C++层的buffer转换成jbyte array，传给java层
+    jbyteArray jbuffer = jniEnv->NewByteArray(size);
+    //填充数据
+    jniEnv->SetByteArrayRegion(jbuffer, 0, size, static_cast<const jbyte *>(buffer));
+
+    //
+    jniEnv->CallVoidMethod(jobj, jmid_retpcm, size, jbuffer, size);
+
+    //销毁防止内存泄漏
+    jniEnv->DeleteLocalRef(jbuffer);
+
+    javaVM->DetachCurrentThread();
+
 }
 
 /**
@@ -280,4 +263,30 @@ void MCallJava::onCallPcmRate(int samplerate) {
     jniEnv->CallVoidMethod(jobj, jmid_retpcmRate,samplerate);
     javaVM->DetachCurrentThread();
 
+}
+
+void MCallJava::onCallRenderYUV(int width, int height, uint8_t *frame_y, uint8_t *frame_u,
+                                uint8_t *frame_v) {
+    JNIEnv *jniEnv;
+    if (javaVM->AttachCurrentThread(&jniEnv, 0) != JNI_OK)
+    {
+        return;
+    }
+    //将yuv原始的uint8转为jbyte
+    jbyteArray jbyteY = jniEnv->NewByteArray(width*height);
+    jniEnv->SetByteArrayRegion(jbyteY, 0, width*height, reinterpret_cast<const jbyte *>(frame_y));
+    //u 数据大小长宽各占1/2  YUV420P Y:UV= 4:2
+    jbyteArray jbyteU = jniEnv->NewByteArray(width* height/4);
+    jniEnv->SetByteArrayRegion(jbyteU, 0, width*height/4, reinterpret_cast<const jbyte *>(frame_u));
+    //v数据大小各占1/2
+    jbyteArray jbyteV = jniEnv->NewByteArray(width* height/4);
+    jniEnv->SetByteArrayRegion(jbyteV, 0, width* height/4, reinterpret_cast<const jbyte *>(frame_v));
+
+    jniEnv->CallVoidMethod(jobj, jmid_renderyuv,width,height,jbyteY,jbyteU,jbyteV);
+
+    jniEnv->DeleteLocalRef(jbyteY);
+    jniEnv->DeleteLocalRef(jbyteU);
+    jniEnv->DeleteLocalRef(jbyteV);
+
+    javaVM->DetachCurrentThread();
 }

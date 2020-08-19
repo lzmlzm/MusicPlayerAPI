@@ -29,6 +29,7 @@ public:
     jmethodID jmid_callcomplete;
     jmethodID jmid_retpcm;
     jmethodID jmid_retpcmRate;
+    jmethodID jmid_renderyuv;
 public:
     MCallJava(JavaVM *javaVM, JNIEnv *env, jobject *obj);
 
@@ -51,6 +52,8 @@ public:
     void onCallPcmInfo(void *buffer, int size);
 
     void onCallPcmRate(int samplerate);
+
+    void onCallRenderYUV(int width,int height,uint8_t *frame_y,uint8_t *frame_u,uint8_t *frame_v);
 };
 
 

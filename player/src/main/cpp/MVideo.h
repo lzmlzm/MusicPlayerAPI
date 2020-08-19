@@ -14,6 +14,8 @@ extern"C"
 #include <libswresample/swresample.h>
 #include <libavutil/time.h>
 #include <libavformat/avformat.h>
+#include <libavutil/imgutils.h>
+#include <libswscale/swscale.h>
 };
 class MVideo{
 

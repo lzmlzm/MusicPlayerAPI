@@ -486,6 +486,19 @@ public class Mplayer {
         n_speed(speed);
     }
 
+    /**
+     * C++调用获取YUV数据
+     * @param width
+     * @param height
+     * @param y
+     * @param u
+     * @param v
+     */
+    public void onCallRenderYUV(int width,int height,byte[] y,byte[] u,byte[] v)
+    {
+        mylog.d("yuv--------------------------------------》");
+    }
+
     //解码音频
     private native void n_prepared(String source);
 

@@ -2,6 +2,7 @@
 // Created by lzm on 2020/8/18.
 //
 
+
 #include "MVideo.h"
 
 MVideo::MVideo(MPlaystatus *Playstatus, MCallJava *mCallJava) {
@@ -74,8 +75,78 @@ void *playvideo(void *data)
             continue;
         }
 
-        LOGD("解码AVFRAME：success");
+        //处理avframe，420p直接给OpenGL，非420p要转换格式
+        if(avFrame->format == AV_PIX_FMT_YUV420P)
+        {
+            LOGD("YUV420P");
+            mVideo->mCallJava->onCallRenderYUV(
+                    mVideo->avCodecContext->width,
+                    mVideo->avCodecContext->height,
+                    avFrame->data[0],//Y
+                    avFrame->data[1],//U
+                    avFrame->data[2]//V
+                    );
+        } else{
+            LOGD("不是YUV420P");
+            AVFrame *avFrameYUV420P = av_frame_alloc();
+            //从解码器上下文获得视频的长宽，计算要转成yuv420p的空间大小
+            int outYUVBufferSize = av_image_get_buffer_size(
+                    AV_PIX_FMT_YUV420P,
+                    mVideo->avCodecContext->width,
+                    mVideo->avCodecContext->height,1);
 
+            uint8_t *outYUV420pBuffer = static_cast<uint8_t *>(av_malloc((outYUVBufferSize * sizeof(uint8_t))));
+
+            //填充转换
+            av_image_fill_arrays(
+                    avFrameYUV420P->data,
+                    avFrameYUV420P->linesize,
+                    outYUV420pBuffer,
+                    AV_PIX_FMT_YUV420P,
+                    mVideo->avCodecContext->width,
+                    mVideo->avCodecContext->height,
+                    1);
+            //转换上下文
+            SwsContext *swsContext = sws_getContext(
+                    mVideo->avCodecContext->width,
+                    mVideo->avCodecContext->height,
+                    mVideo->avCodecContext->pix_fmt,
+                    mVideo->avCodecContext->width,
+                    mVideo->avCodecContext->height,
+                    AV_PIX_FMT_YUV420P,
+                    SWS_BICUBIC,//转码算法
+                    NULL,
+                    NULL,
+                    NULL
+                    );
+            //转码器上下文分配失败
+            if(!swsContext)
+            {
+                av_frame_free(&avFrameYUV420P);
+                av_free(avFrameYUV420P);
+                av_free(outYUV420pBuffer);
+                continue;
+            }
+
+            //转换
+            sws_scale(
+                    swsContext,
+                    avFrame->data,
+                    avFrame->linesize,
+                    0,
+                    avFrame->height,
+                    avFrameYUV420P->data,
+                    avFrameYUV420P->linesize
+                    );
+            //渲染
+            mVideo->mCallJava->onCallRenderYUV(
+                    mVideo->avCodecContext->width,
+                    mVideo->avCodecContext->height,
+                    avFrameYUV420P->data[0],//Y
+                    avFrameYUV420P->data[1],//U
+                    avFrameYUV420P->data[2]//V
+            );
+        }
         av_frame_free(&avFrame);
         av_free(avFrame);
         avFrame=NULL;
@@ -83,9 +154,6 @@ void *playvideo(void *data)
         av_free(avPacket);
         avPacket = NULL;
     }
-
-
-
 
     pthread_exit(&mVideo->threadPlayVideo);
 }
