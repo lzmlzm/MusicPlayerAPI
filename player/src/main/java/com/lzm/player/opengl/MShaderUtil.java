@@ -1,7 +1,7 @@
 package com.lzm.player.opengl;
 
 import android.content.Context;
-import android.opengl.GLES31;
+import android.opengl.GLES20;
 import android.util.Log;
 
 import java.io.BufferedReader;
@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
-import javax.microedition.khronos.opengles.GL;
 
 //shader加载类
 public class MShaderUtil {
@@ -57,24 +56,24 @@ public class MShaderUtil {
      */
     public static int loadShader(int shaderType, String source)
     {
-        int shader = GLES31.glCreateShader(shaderType);
+        int shader = GLES20.glCreateShader(shaderType);
         if(shader != 0)
         {
             //将源码与shader关联
-            GLES31.glShaderSource(shader,source);
+            GLES20.glShaderSource(shader,source);
             //编译shader
-            GLES31.glCompileShader(shader);
+            GLES20.glCompileShader(shader);
             int[] compile = new int[1];
 
             //检查shader,将编译状态传回给compile数组
-            GLES31.glGetShaderiv(shader,GLES31.GL_COMPILE_STATUS,compile,0);
+            GLES20.glGetShaderiv(shader,GLES20.GL_COMPILE_STATUS,compile,0);
 
             //编译失败
-            if(compile[0] != GLES31.GL_TRUE)
+            if(compile[0] != GLES20.GL_TRUE)
             {
                 //删除shader
                 Log.d("lzm","shader compile error!");
-                GLES31.glDeleteShader(shader);
+                GLES20.glDeleteShader(shader);
                 shader = 0;
             }
         }
@@ -91,37 +90,37 @@ public class MShaderUtil {
     public static int createProgram(String vertexSource,String fragmentSource)
     {
         //加载顶点着色器
-        int vertexShader = loadShader(GLES31.GL_VERTEX_SHADER,vertexSource);
+        int vertexShader = loadShader(GLES20.GL_VERTEX_SHADER,vertexSource);
         if(vertexShader == 0)
         {
             return 0;
         }
 
         //加载片源着色器
-        int fragmentShader = loadShader(GLES31.GL_FRAGMENT_SHADER,fragmentSource);
+        int fragmentShader = loadShader(GLES20.GL_FRAGMENT_SHADER,fragmentSource);
         if(fragmentShader == 0)
         {
             return 0;
         }
 
         //创建program
-        int program = GLES31.glCreateProgram();
+        int program = GLES20.glCreateProgram();
         if(program != 0)
         {
             //将shader 贴到 program上
-            GLES31.glAttachShader(program,vertexShader);
-            GLES31.glAttachShader(program,fragmentShader);
+            GLES20.glAttachShader(program,vertexShader);
+            GLES20.glAttachShader(program,fragmentShader);
 
             //链接program
-            GLES31.glLinkProgram(program);
+            GLES20.glLinkProgram(program);
 
             //j检查link是否成功
             int[] linkStatus = new int[1];
-            GLES31.glGetProgramiv(program,GLES31.GL_LINK_STATUS,linkStatus,0);
-            if(linkStatus[0] != GLES31.GL_TRUE)
+            GLES20.glGetProgramiv(program,GLES20.GL_LINK_STATUS,linkStatus,0);
+            if(linkStatus[0] != GLES20.GL_TRUE)
             {
                 Log.d("lzm","link program error");
-                GLES31.glDeleteProgram(program);
+                GLES20.glDeleteProgram(program);
                 program = 0;
             }
         }

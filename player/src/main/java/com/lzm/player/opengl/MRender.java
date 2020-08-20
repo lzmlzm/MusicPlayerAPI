@@ -1,15 +1,12 @@
 package com.lzm.player.opengl;
-
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.opengl.GLES31;
+import android.opengl.GLES20;
+
 import android.opengl.GLSurfaceView;
-import android.opengl.GLUtils;
+import android.util.Log;
 
 import com.lzm.player.R;
-
-import java.io.IOException;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
@@ -53,11 +50,25 @@ public class MRender implements GLSurfaceView.Renderer {
 
 
     private Context context;
-    private int program;
-    private int avPosition;
-    private int afPosition;
-    private int sTexture;
+    private int program_yuv;
+    private int avPosition_yuv;
+    private int afPosition_yuv;
     private int texture_Id;
+
+    private int sample_y;
+    private int sample_u;
+    private int sample_v;
+
+    private int width_yuv;
+    private int height_yuv;
+
+    //保存C++传来的yuv数据
+    private ByteBuffer y;
+    private ByteBuffer u;
+    private ByteBuffer v;
+
+    private int[] textureId_yuv;
+    private int[] textureIdS_yuv;
 
     //构造方法
     public  MRender(Context context)
@@ -76,91 +87,145 @@ public class MRender implements GLSurfaceView.Renderer {
                 .put(textureData);//放入数据
         textureBuffer.position(0);
 
+
     }
 
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-
-        //从文件中读取顶点shader源码
-        String vertexShaderSource = MShaderUtil.readRawShader(context, R.raw.vertex_shader);
-
-        //从文件中读取片源shader源码
-        String fragmentShaderSource = MShaderUtil.readRawShader(context, R.raw.fragment_shader);
-
-        //创建program
-        program = MShaderUtil.createProgram(vertexShaderSource,fragmentShaderSource);
-        //success
-        if(program>0)
-        {
-            //从着色器代码中获取"av_Position" "af_Color"
-            avPosition = GLES31.glGetAttribLocation(program,"av_Position");
-            afPosition = GLES31.glGetAttribLocation(program,"af_Position");
-            sTexture = GLES31.glGetUniformLocation(program,"sTexture");
-
-            //创建纹理
-            int[] textureIds = new int[1];
-            GLES31.glGenTextures(1,textureIds,0);
-            if(textureIds[0] == 0)
-            {
-                return;
-            }
-
-            //保存纹理
-            texture_Id = textureIds[0];
-            //绑定纹理
-            GLES31.glBindTexture(GLES31.GL_TEXTURE_2D, texture_Id);
-            //设置环绕方式:
-            //s,t=x,y,超出边界的重复绘制
-            GLES31.glTexParameteri(GLES31.GL_TEXTURE_2D, GLES31.GL_TEXTURE_WRAP_S, GLES31.GL_REPEAT);
-            GLES31.glTexParameteri(GLES31.GL_TEXTURE_2D, GLES31.GL_TEXTURE_WRAP_T, GLES31.GL_REPEAT);
-            //设置过滤方式,纹理像素映射到坐标点
-            GLES31.glTexParameteri(GLES31.GL_TEXTURE_2D, GLES31.GL_TEXTURE_MIN_FILTER, GLES31.GL_LINEAR);
-            GLES31.glTexParameteri(GLES31.GL_TEXTURE_2D, GLES31.GL_TEXTURE_MAG_FILTER, GLES31.GL_LINEAR);
-
-
-            BitmapFactory.Options options = new BitmapFactory.Options();
-            //关闭缩放
-            options.inScaled = false;
-            //生成一个bitmap
-            //Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(),);
-            Bitmap bitmap =null;
-            if(bitmap==null)
-            {
-                return;
-            }
-            //加载图片
-            GLUtils.texImage2D(GLES31.GL_TEXTURE_2D,0,bitmap,0);
-            bitmap.recycle();
-            bitmap = null;
-        }
+        //初始化YUV纹理
+        initRenderYUV();
     }
 
 
     @Override
     public void onSurfaceChanged(GL10 gl, int width, int height) {
         //起点终点，长宽
-        GLES31.glViewport(0,0, width, height);
+        GLES20.glViewport(0,0, width, height);
     }
 
     @Override
     public void onDrawFrame(GL10 gl) {
         //对颜色缓冲区清屏
-        GLES31.glClear(GLES31.GL_COLOR_BUFFER_BIT);
-        GLES31.glClearColor(1,1,1,1);
+        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
+        GLES20.glClearColor(1,0,0,1);
+        renderYUV();
+    }
 
-        //使用program
-        GLES31.glUseProgram(program);
+    /**
+     * 初始化YUV纹理
+     */
+    private void initRenderYUV()
+    {
+        //从文件中读取顶点shader源码
+        String vertexShaderSource = MShaderUtil.readRawShader(context, R.raw.vertex_shader);
+        //从文件中读取片源shader源码
+        String fragmentShaderSource = MShaderUtil.readRawShader(context, R.raw.fragment_shader);
+        //创建program
+        program_yuv = MShaderUtil.createProgram(vertexShaderSource,fragmentShaderSource);
 
-        //使能顶点坐标
-        GLES31.glEnableVertexAttribArray(avPosition);
-        //将param5：顶点坐标传入
-        GLES31.glVertexAttribPointer(avPosition,2,GLES31.GL_FLOAT,false,8, vertexBuffer);//2*4=8
+        //从着色器代码中获取"av_Position" "af_Color"
+        avPosition_yuv = GLES20.glGetAttribLocation(program_yuv,"av_Position");
+        afPosition_yuv = GLES20.glGetAttribLocation(program_yuv,"af_Position");
 
-        //使能片源坐标
-        GLES31.glEnableVertexAttribArray(afPosition);
-        //将param5：纹理坐标传入
-        GLES31.glVertexAttribPointer(afPosition,2,GLES31.GL_FLOAT,false,8, textureBuffer);//2*4=8
-        GLES31.glDrawArrays(GLES31.GL_TRIANGLE_STRIP,0,4);
+        sample_y = GLES20.glGetUniformLocation(program_yuv,"sample_y");
+        sample_u = GLES20.glGetUniformLocation(program_yuv,"sample_u");
+        sample_v = GLES20.glGetUniformLocation(program_yuv,"sample_v");
+
+        //创建YUV纹理
+        textureId_yuv = new int[3];
+        textureIdS_yuv = new int[3];
+        GLES20.glGenTextures(3,textureIdS_yuv,0);
+        for(int i=0;i<3;i++)
+        {
+            textureId_yuv[i] = textureIdS_yuv[i];
+            //绑定纹理
+            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureId_yuv[i]);
+            //设置环绕方式:
+            //s,t=x,y,超出边界的重复绘制
+            GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_REPEAT);
+            GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_REPEAT);
+            //设置过滤方式,纹理像素映射到坐标点
+            GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
+            GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
+        }
+    }
+
+    /**
+     * 设置YUV数据
+     * @param width
+     * @param height
+     * @param y
+     * @param u
+     * @param v
+     */
+    public void setYUVData(int width, int height, byte[] y,  byte[] u,  byte[] v)
+    {
+        this.width_yuv = width;
+        this.height_yuv = height;
+        //滑入yuv byte到buffer缓冲区内
+        this.y = ByteBuffer.wrap(y);
+        this.u = ByteBuffer.wrap(u);
+        this.v = ByteBuffer.wrap(v);
+    }
+
+    /**
+     * 渲染YUV
+     */
+    public void renderYUV()
+    {
+        if(width_yuv > 0 && height_yuv > 0 && y != null && u != null && v != null)
+        {
+            GLES20.glUseProgram(program_yuv);
+            //使能顶点坐标
+            GLES20.glEnableVertexAttribArray(avPosition_yuv);
+            //将param5：顶点坐标传入
+            GLES20.glVertexAttribPointer(avPosition_yuv,2,GLES20.GL_FLOAT,false,8, vertexBuffer);//2*4=8
+            //使能片源坐标
+            GLES20.glEnableVertexAttribArray(afPosition_yuv);
+            //将param5：纹理坐标传入
+            GLES20.glVertexAttribPointer(afPosition_yuv,2,GLES20.GL_FLOAT,false,8, textureBuffer);//2*4=8
+
+            //激活纹理
+            GLES20.glActiveTexture(GLES20.GL_TEXTURE1);
+            //绑定纹理
+            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureId_yuv[0]);
+            //映射，传入y像素值
+            GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D,0,GLES20.GL_LUMINANCE,
+                    width_yuv,height_yuv,0,
+                    GLES20.GL_LUMINANCE,GLES20.GL_UNSIGNED_BYTE,y);
+
+            //激活纹理
+            GLES20.glActiveTexture(GLES20.GL_TEXTURE2);
+            //绑定纹理
+            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureId_yuv[1]);
+            //映射，传入u像素值
+            GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D,0,GLES20.GL_LUMINANCE,
+                    width_yuv / 2,height_yuv / 2,0,
+                    GLES20.GL_LUMINANCE,GLES20.GL_UNSIGNED_BYTE,u);
+
+            //激活纹理
+            GLES20.glActiveTexture(GLES20.GL_TEXTURE3);
+            //绑定纹理
+            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureId_yuv[2]);
+            //映射，传入v像素值
+            GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D,0,GLES20.GL_LUMINANCE,
+                    width_yuv / 2,height_yuv / 2,0,
+                    GLES20.GL_LUMINANCE,GLES20.GL_UNSIGNED_BYTE,v);
+
+            GLES20.glUniform1i(sample_y,1);
+            GLES20.glUniform1i(sample_u,2);
+            GLES20.glUniform1i(sample_v,3);
+            y.clear();
+            u.clear();
+            v.clear();
+
+            y=null;
+            u=null;
+            v=null;
+
+            GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP,0,4);
+        }
+
 
     }
 }

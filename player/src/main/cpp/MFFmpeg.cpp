@@ -177,7 +177,7 @@ void MFFmpeg::start() {
             continue;
         }
         //缓存30个包
-        if(audio->queue->getQueueSIze() > 30)
+        if(audio->queue->getQueueSIze() > 1)
         {
             av_usleep(1000*100);
             continue;//存40帧再处理数据
@@ -202,6 +202,7 @@ void MFFmpeg::start() {
             else if(avPacket->stream_index == mVideo->streamindex)
             {
                 //视频avPacket入队
+                LOGD("视频数据入队")
                 mVideo->mQueue->putAvpacket(avPacket);
             }
             else{
@@ -237,12 +238,7 @@ void MFFmpeg::start() {
         av_free(avPacket);
         avPacket = NULL;
     }
-
-    if(callJava!=NULL)
-    {
-        callJava->onCallComplete(CHILD_THREAD);
-    }
-    exit = true;
+    callJava->onCallComplete(CHILD_THREAD);
 }
 
 /**
@@ -451,7 +447,8 @@ bool MFFmpeg::cutAudio(int start, int end, bool returnPcm) {
     return false;
 }
 
-int MFFmpeg::getCodecContext(AVCodecParameters *avCodecParameters, AVCodecContext **avCodecCtx) {
+int MFFmpeg::getCodecContext(AVCodecParameters *avCodecParameters, AVCodecContext **avCodecCtx)
+{
     //找到解码器
 
     AVCodec *avCodec = avcodec_find_decoder(avCodecParameters->codec_id);

@@ -44,6 +44,7 @@ import com.lzm.player.listener.MOnValueDBListener;
 import com.lzm.player.muteenum.MuteEnum;
 import com.lzm.player.myplayer.Mplayer;
 import com.lzm.player.log.mylog;
+import com.lzm.player.opengl.MGLSurfaceView;
 import com.lzm.player.util.MTimeUtil;
 
 import java.io.File;
@@ -52,10 +53,12 @@ import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final String TAG = "lzm";
     private Mplayer mplayer;
     private TextView tvTime;
-    private PreviewView mviewfinder;
+    //private PreviewView mviewfinder;
     private ImageCapture mImageCapture;
+    private MGLSurfaceView mglSurfaceView;
     private int mFacingCam = CameraSelector.LENS_FACING_BACK;//默认打开后摄
     private int REQUEST_CODE_PERMISSIONS = 10; //arbitrary number, can be changed accordingly
     private final String[] REQUIRED_PERMISSIONS = new String[]{"android.permission.CAMERA",
@@ -75,23 +78,25 @@ public class MainActivity extends AppCompatActivity {
         //找到时间轴的布局
         tvTime = findViewById(R.id.tv_time);
         //找到相机view的布局
-        //mviewfinder = findViewById(R.id.viewFinder);
 
         seekBar = findViewById(R.id.seekbar_seek);
         volume_seekBar = findViewById(R.id.volume_bar);
-        mviewfinder = findViewById(R.id.viewFinder);
+        //mviewfinder = findViewById(R.id.viewFinder);
+        mglSurfaceView = findViewById(R.id.glsurfaceview);
+        mplayer.setMglSurfaceView(mglSurfaceView);
+
 
         mplayer.setVolume(50);//默认音量
         //mplayer.setMute(MuteEnum.MUTE_THREED);//默认立体声
 
         //监听布局变化
-        mviewfinder.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
+        /*mviewfinder.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
             @Override
             public void onLayoutChange(View view, int i, int i1, int i2, int i3, int i4, int i5, int i6, int i7) {
                 updateTransform();
             }
         });
-
+*/
 
 
         //监听接口回调，获取C++层回调给JAVA函数的数据
@@ -226,6 +231,7 @@ public class MainActivity extends AppCompatActivity {
     //开始播放按下
     public void begin(View view) {
         mplayer.setSource(Environment.getExternalStorageDirectory()+"/test.mp4");
+        //mplayer.setSource("http://vjs.zencdn.net/v/oceans.mp4");
         //准备数据并投喂给队列
         mplayer.prepared();
     }
@@ -267,12 +273,12 @@ public class MainActivity extends AppCompatActivity {
 
     //播放下一个
     public void next(View view) {
-        mplayer.playNext("/sdcard/netease/cloudmusic/Music/蔡健雅 - 红色高跟鞋.mp3");
+        //mplayer.playNext("/sdcard/netease/cloudmusic/Music/蔡健雅 - 红色高跟鞋.mp3");
     }
 
 
 
-    //获取权限并开启摄像头
+   /* //获取权限并开启摄像头
     public void startCap(View view){
         if(allPermissionGranted()){
             startCamera();
@@ -328,7 +334,7 @@ public class MainActivity extends AppCompatActivity {
                                     .build();
                             ListenableFuture future =cameraControl.startFocusAndMetering(action);
 
-                            /*future.addListener(()->{
+                            *//*future.addListener(()->{
                                 try {
                                     FocusMeteringResult result = (FocusMeteringResult) future.get();
                                     if(result.isFocusSuccessful()){
@@ -337,7 +343,7 @@ public class MainActivity extends AppCompatActivity {
                                 }catch (Exception e){
 
                                 }
-                            }, executor);*/
+                            }, executor);*//*
 
                             return false;
                         }
@@ -364,10 +370,10 @@ public class MainActivity extends AppCompatActivity {
     public void takePhoto(View view){
         if(mImageCapture!=null){
             //create folder
-            /*File dir = new File(getExternalCacheDir()"/camlzmx");
+            *//*File dir = new File(getExternalCacheDir()"/camlzmx");
             if(!dir.exists()){
                 dir.mkdirs();
-            }*/
+            }*//*
             //create files
             final File file = new File(getExternalCacheDir()+"/lzm"+System.currentTimeMillis()+".jpg");
             Log.d("Main",getExternalCacheDir()+"/lzm"+System.currentTimeMillis()+".jpg");
@@ -403,8 +409,8 @@ public class MainActivity extends AppCompatActivity {
                 CameraSelector.LENS_FACING_BACK : CameraSelector.LENS_FACING_FRONT;
         startCamera();
     }
-
-    //申请权限的回调
+*/
+    /*//申请权限的回调
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         //start camera when permissions have been granted otherwise exit app
@@ -429,7 +435,7 @@ public class MainActivity extends AppCompatActivity {
 
         return true;
     }
-
+*/
     //左右声道切换
     public void turnleft(View view) {
         mplayer.setMute(MuteEnum.MUTE_LEFT);

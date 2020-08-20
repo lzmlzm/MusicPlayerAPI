@@ -78,7 +78,6 @@ void *playvideo(void *data)
         //处理avframe，420p直接给OpenGL，非420p要转换格式
         if(avFrame->format == AV_PIX_FMT_YUV420P)
         {
-            LOGD("YUV420P");
             mVideo->mCallJava->onCallRenderYUV(
                     mVideo->avCodecContext->width,
                     mVideo->avCodecContext->height,
@@ -95,7 +94,7 @@ void *playvideo(void *data)
                     mVideo->avCodecContext->width,
                     mVideo->avCodecContext->height,1);
 
-            uint8_t *outYUV420pBuffer = static_cast<uint8_t *>(av_malloc((outYUVBufferSize * sizeof(uint8_t))));
+            uint8_t *outYUV420pBuffer = static_cast<uint8_t *>(av_malloc(outYUVBufferSize * sizeof(uint8_t)));
 
             //填充转换
             av_image_fill_arrays(

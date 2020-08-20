@@ -12,11 +12,13 @@ import com.lzm.player.listener.MOnTimeInfoListener;
 import com.lzm.player.listener.MOnValueDBListener;
 import com.lzm.player.log.mylog;
 import com.lzm.player.muteenum.MuteEnum;
+import com.lzm.player.opengl.MGLSurfaceView;
 
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
 import android.text.TextUtils;
+import android.util.Log;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -57,10 +59,20 @@ public class Mplayer {
     private MOnRecordTimeListener mOnRecordTimeListener;//录音时间接口
     private MOnCompleteListener mOnCompleteListener;
     private MOnPcmInfoListener mOnPcmInfoListener;
+    private MGLSurfaceView mglSurfaceView;
 
     public  Mplayer(){}
 
-    //实现播放
+
+
+
+    /**
+     * 设置播放资源
+     * @param source
+     */
+    public void setSource(String source) {
+        this.source = source;
+    }
 
     /**
      * 准备播放资源
@@ -177,13 +189,6 @@ public class Mplayer {
         n_mute(muteEnum.getValue());
     }
 
-    /**
-     * 设置播放资源
-     * @param source
-     */
-    public void setSource(String source) {
-        this.source = source;
-    }
 
     /**
      * 获取播放时长
@@ -207,6 +212,14 @@ public class Mplayer {
         source = url;
         playNext = true;
         stop();
+    }
+
+    /**
+     * 设置GLSurfaceView
+     * @param mglSurfaceView
+     */
+    public void setMglSurfaceView(MGLSurfaceView mglSurfaceView) {
+        this.mglSurfaceView = mglSurfaceView;
     }
 
     /**
@@ -496,7 +509,10 @@ public class Mplayer {
      */
     public void onCallRenderYUV(int width,int height,byte[] y,byte[] u,byte[] v)
     {
-        mylog.d("yuv--------------------------------------》");
+        if(mglSurfaceView!=null)
+        {
+            mglSurfaceView.setYUVData(width,height,y,u,v);
+        }
     }
 
     //解码音频

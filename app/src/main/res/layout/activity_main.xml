@@ -19,6 +19,7 @@
             android:layout_height="60dp"
             android:layout_gravity="center"
             android:onClick="begin"
+            android:layout_weight="1"
             android:text="@string/start" />
 
         <Button
@@ -27,6 +28,7 @@
             android:layout_height="60dp"
             android:layout_gravity="center"
             android:onClick="pause"
+            android:layout_weight="1"
             android:text="@string/stop" />
 
         <Button
@@ -34,6 +36,7 @@
             android:layout_height="60dp"
             android:layout_gravity="center"
             android:onClick="next"
+            android:layout_weight="1"
             android:text="切换播放" />
 
         <Button
@@ -42,6 +45,7 @@
             android:layout_height="60dp"
             android:layout_gravity="center"
             android:onClick="resume"
+            android:layout_weight="1"
             android:text="播放" />
 
         <Button
@@ -50,6 +54,7 @@
             android:layout_height="60dp"
             android:layout_gravity="center"
             android:onClick="seek"
+            android:layout_weight="1"
             android:text="seek" />
 
     </LinearLayout>
@@ -64,14 +69,16 @@
             android:layout_height="60dp"
             android:layout_gravity="center"
             android:onClick="stop"
+            android:layout_weight="1"
             android:text="停止" />
 
 
-        <Button
+        <!--<Button
             android:layout_width="80dp"
             android:layout_height="60dp"
             android:layout_gravity="center"
             android:onClick="switchCamera"
+            android:layout_weight="1"
             android:text="切换摄像头" />
 
         <Button
@@ -80,6 +87,7 @@
             android:layout_height="60dp"
             android:layout_gravity="center"
             android:onClick="takePhoto"
+            android:layout_weight="1"
             android:scaleType="fitCenter"
             android:text="拍照" />
 
@@ -89,8 +97,9 @@
             android:layout_height="60dp"
             android:layout_gravity="center"
             android:onClick="startCap"
+            android:layout_weight="1"
             android:text="录制" />
-
+-->
     </LinearLayout>
 
     <LinearLayout
@@ -121,6 +130,7 @@
                 android:layout_height="40dp"
                 android:layout_gravity="left"
                 android:onClick="turnleft"
+                android:layout_weight="1"
                 android:text="左声道" />
 
             <Button
@@ -129,6 +139,7 @@
                 android:layout_height="40dp"
                 android:layout_gravity="center"
                 android:onClick="turnright"
+                android:layout_weight="1"
                 android:text="右声道" />
 
             <Button
@@ -137,6 +148,7 @@
                 android:layout_height="40dp"
                 android:layout_gravity="center"
                 android:onClick="threed"
+                android:layout_weight="1"
                 android:text="立体声" />
         </LinearLayout>
 
@@ -145,19 +157,26 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
-        <androidx.camera.view.PreviewView
-            android:id="@+id/viewFinder"
+        <com.lzm.player.opengl.MGLSurfaceView
+            android:id="@+id/glsurfaceview"
+            android:layout_width="384dp"
+            android:layout_height="216dp">
+
+        </com.lzm.player.opengl.MGLSurfaceView>
+        <!--<android.opengl.GLSurfaceView
+            android:id="@+id/glsurfaceview"
             android:layout_width="match_parent"
             android:layout_height="300dp">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:text="Camera"
-                android:textAlignment="center"
-                android:textColor="#ffffffff" />
-        </androidx.camera.view.PreviewView>
+        </android.opengl.GLSurfaceView>-->
+
+       <!-- <androidx.camera.view.PreviewView
+            android:id="@+id/viewFinder"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+        </androidx.camera.view.PreviewView>-->
     </LinearLayout>
+
 
 </androidx.appcompat.widget.LinearLayoutCompat>
