@@ -10,7 +10,7 @@ public class MGLSurfaceView extends GLSurfaceView {
     private MRender mRender;
 
     public MGLSurfaceView(Context context) {
-        this(context,null);
+        super(context);
     }
 
     public MGLSurfaceView(Context context, AttributeSet attrs) {
@@ -31,7 +31,6 @@ public class MGLSurfaceView extends GLSurfaceView {
             mRender.setYUVData(width,height,y,u,v);
             //设置数据后请求渲染
             requestRender();
-            Log.d("TAG", "setYUVData: succsee");
         }
     }
 }

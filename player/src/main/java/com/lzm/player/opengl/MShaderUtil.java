@@ -22,31 +22,22 @@ public class MShaderUtil {
      * @return
      * @throws IOException
      */
-    public static  String readRawShader(Context context,int rawId) {
-        //从RAW下打开输入数据流
+    public static String readRawTextFile(Context context, int rawId) {
         InputStream inputStream = context.getResources().openRawResource(rawId);
-        //读取数据流
-        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-
-        StringBuffer stringBuffer = new StringBuffer();
-
-        String line;
-        //一行一行读取
-        try
-        {
-            while ((line = reader.readLine()) !=null)
-            {
-                stringBuffer.append(line).append("\n");
+        try {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                sb.append(line).append("\n");
             }
-
             reader.close();
-        }catch (Exception e)
-        {
+            return sb.toString();
+        } catch (IOException e) {
             e.printStackTrace();
         }
-        return stringBuffer.toString();
+        return null;
     }
-
 
     /**
      * shader加载

@@ -86,7 +86,6 @@ void *playvideo(void *data)
                     avFrame->data[2]//V
                     );
         } else{
-            LOGD("不是YUV420P");
             AVFrame *avFrameYUV420P = av_frame_alloc();
             //从解码器上下文获得视频的长宽，计算要转成yuv420p的空间大小
             int outYUVBufferSize = av_image_get_buffer_size(

@@ -177,7 +177,7 @@ void MFFmpeg::start() {
             continue;
         }
         //缓存30个包
-        if(audio->queue->getQueueSIze() > 1)
+        if(audio->queue->getQueueSIze() > 50)
         {
             av_usleep(1000*100);
             continue;//存40帧再处理数据

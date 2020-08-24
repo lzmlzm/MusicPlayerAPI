@@ -16,28 +16,13 @@ import javax.microedition.khronos.opengles.GL10;
 
 public class MRender implements GLSurfaceView.Renderer {
 
-    //顶点坐标系
-    //          ^
-    //          |
-    //          |
-    //  --------------------->
-    //          |
-    //          |
-    //          |
     private final float[] vertexData={
             -1f,-1f,
             1f,-1f,
             -1f,1f,
             1f,1f
     };
-    //图片纹理坐标系
-    //|
-    //--------------------->
-    //|
-    //|
-    //|
-    //|
-    //v
+
     private final float[] textureData={
             0f,1f,
             1f,1f,
@@ -68,25 +53,23 @@ public class MRender implements GLSurfaceView.Renderer {
     private ByteBuffer v;
 
     private int[] textureId_yuv;
-    private int[] textureIdS_yuv;
 
     //构造方法
     public  MRender(Context context)
     {
         this.context = context;
 
-        vertexBuffer = ByteBuffer.allocateDirect(vertexData.length*4)//为顶点坐标分配buffer
+        vertexBuffer = ByteBuffer.allocateDirect(vertexData.length * 4)//为顶点坐标分配buffer
                 .order(ByteOrder.nativeOrder())//使用native方法
                 .asFloatBuffer()//转为float
                 .put(vertexData);//放入数据
         vertexBuffer.position(0);
 
-        textureBuffer = ByteBuffer.allocateDirect(textureData.length*4)//为顶点坐标分配buffer
+        textureBuffer = ByteBuffer.allocateDirect(textureData.length * 4)//为顶点坐标分配buffer
                 .order(ByteOrder.nativeOrder())//使用native方法
                 .asFloatBuffer()//转为float
                 .put(textureData);//放入数据
         textureBuffer.position(0);
-
 
     }
 
@@ -107,7 +90,7 @@ public class MRender implements GLSurfaceView.Renderer {
     public void onDrawFrame(GL10 gl) {
         //对颜色缓冲区清屏
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
-        GLES20.glClearColor(1,0,0,1);
+        GLES20.glClearColor(1,1,1,1);
         renderYUV();
     }
 
@@ -117,27 +100,26 @@ public class MRender implements GLSurfaceView.Renderer {
     private void initRenderYUV()
     {
         //从文件中读取顶点shader源码
-        String vertexShaderSource = MShaderUtil.readRawShader(context, R.raw.vertex_shader);
+        String vertexShaderSource = MShaderUtil.readRawTextFile(context, R.raw.vertex_shader);
         //从文件中读取片源shader源码
-        String fragmentShaderSource = MShaderUtil.readRawShader(context, R.raw.fragment_shader);
+        String fragmentShaderSource = MShaderUtil.readRawTextFile(context, R.raw.fragment_shader);
         //创建program
         program_yuv = MShaderUtil.createProgram(vertexShaderSource,fragmentShaderSource);
 
         //从着色器代码中获取"av_Position" "af_Color"
+
         avPosition_yuv = GLES20.glGetAttribLocation(program_yuv,"av_Position");
         afPosition_yuv = GLES20.glGetAttribLocation(program_yuv,"af_Position");
 
-        sample_y = GLES20.glGetUniformLocation(program_yuv,"sample_y");
-        sample_u = GLES20.glGetUniformLocation(program_yuv,"sample_u");
-        sample_v = GLES20.glGetUniformLocation(program_yuv,"sample_v");
+        sample_y = GLES20.glGetUniformLocation(program_yuv,"sampler_y");
+        sample_u = GLES20.glGetUniformLocation(program_yuv,"sampler_u");
+        sample_v = GLES20.glGetUniformLocation(program_yuv,"sampler_v");
 
         //创建YUV纹理
         textureId_yuv = new int[3];
-        textureIdS_yuv = new int[3];
-        GLES20.glGenTextures(3,textureIdS_yuv,0);
+        GLES20.glGenTextures(3,textureId_yuv,0);
         for(int i=0;i<3;i++)
         {
-            textureId_yuv[i] = textureIdS_yuv[i];
             //绑定纹理
             GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureId_yuv[i]);
             //设置环绕方式:
@@ -180,13 +162,14 @@ public class MRender implements GLSurfaceView.Renderer {
             GLES20.glEnableVertexAttribArray(avPosition_yuv);
             //将param5：顶点坐标传入
             GLES20.glVertexAttribPointer(avPosition_yuv,2,GLES20.GL_FLOAT,false,8, vertexBuffer);//2*4=8
+            textureBuffer.position(0);
             //使能片源坐标
             GLES20.glEnableVertexAttribArray(afPosition_yuv);
             //将param5：纹理坐标传入
             GLES20.glVertexAttribPointer(afPosition_yuv,2,GLES20.GL_FLOAT,false,8, textureBuffer);//2*4=8
 
             //激活纹理
-            GLES20.glActiveTexture(GLES20.GL_TEXTURE1);
+            GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
             //绑定纹理
             GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureId_yuv[0]);
             //映射，传入y像素值
@@ -195,7 +178,7 @@ public class MRender implements GLSurfaceView.Renderer {
                     GLES20.GL_LUMINANCE,GLES20.GL_UNSIGNED_BYTE,y);
 
             //激活纹理
-            GLES20.glActiveTexture(GLES20.GL_TEXTURE2);
+            GLES20.glActiveTexture(GLES20.GL_TEXTURE1);
             //绑定纹理
             GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureId_yuv[1]);
             //映射，传入u像素值
@@ -204,7 +187,7 @@ public class MRender implements GLSurfaceView.Renderer {
                     GLES20.GL_LUMINANCE,GLES20.GL_UNSIGNED_BYTE,u);
 
             //激活纹理
-            GLES20.glActiveTexture(GLES20.GL_TEXTURE3);
+            GLES20.glActiveTexture(GLES20.GL_TEXTURE2);
             //绑定纹理
             GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureId_yuv[2]);
             //映射，传入v像素值
@@ -212,9 +195,10 @@ public class MRender implements GLSurfaceView.Renderer {
                     width_yuv / 2,height_yuv / 2,0,
                     GLES20.GL_LUMINANCE,GLES20.GL_UNSIGNED_BYTE,v);
 
-            GLES20.glUniform1i(sample_y,1);
-            GLES20.glUniform1i(sample_u,2);
-            GLES20.glUniform1i(sample_v,3);
+            GLES20.glUniform1i(sample_y,0);
+            GLES20.glUniform1i(sample_u,1);
+            GLES20.glUniform1i(sample_v,2);
+            GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
             y.clear();
             u.clear();
             v.clear();
@@ -222,8 +206,6 @@ public class MRender implements GLSurfaceView.Renderer {
             y=null;
             u=null;
             v=null;
-
-            GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP,0,4);
         }
 
 

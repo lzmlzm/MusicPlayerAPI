@@ -230,8 +230,10 @@ public class MainActivity extends AppCompatActivity {
     }
     //开始播放按下
     public void begin(View view) {
-        mplayer.setSource(Environment.getExternalStorageDirectory()+"/test.mp4");
-        //mplayer.setSource("http://vjs.zencdn.net/v/oceans.mp4");
+        //mplayer.setSource(Environment.getExternalStorageDirectory()+"/test.mp4");
+        //mplayer.setSource("/storage/emulated/0/DCIM/Camera/VID_20200824_144409.mp4.tmp);
+        mplayer.setSource("http://vjs.zencdn.net/v/oceans.mp4");
+
         //准备数据并投喂给队列
         mplayer.prepared();
     }
