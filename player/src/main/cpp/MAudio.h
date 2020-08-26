@@ -94,6 +94,8 @@ public:
     //默认pcm数据包的大小4096
     int defaultPcmSize = 4096;
 
+    pthread_mutex_t codecMutex;
+
 
 
 public:

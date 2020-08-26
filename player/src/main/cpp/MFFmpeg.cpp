@@ -119,6 +119,15 @@ void MFFmpeg::decodeFFmpegThread() {
                 //设置视频解码器属性
                 mVideo->avCodecParameters=pFormatCtx->streams[i]->codecpar;
                 mVideo->time_base = pFormatCtx->streams[i]->time_base;
+
+                int num = pFormatCtx->streams[i]->avg_frame_rate.num;
+                int den = pFormatCtx->streams[i]->avg_frame_rate.den;
+                //获取默认延迟时间 1 / fps
+                if(num != 0 && den != 0)
+                {
+                    int fps = num/den;//（30/1）
+                    mVideo->defaultDelayTime = 1.0 / fps;
+                }
             }
         }
     }
@@ -166,6 +175,7 @@ void MFFmpeg::start() {
     //
     //开始从队列接收数据并播放
     //
+    mVideo->audio = audio;
     audio->play();
     mVideo->playVideo();
     //检测播放状态
@@ -223,7 +233,11 @@ void MFFmpeg::start() {
                     av_usleep(1000*100);
                     continue;
                 } else{
-                    mPlaystatus->exit = true;
+                    if(!mPlaystatus->seek)
+                    {
+                        av_usleep(1000*500);
+                        mPlaystatus->exit = true;
+                    }
                     break;
                 }
             }
@@ -245,6 +259,10 @@ void MFFmpeg::start() {
  * 设置暂停播放
  */
 void MFFmpeg::pause() {
+    if(mPlaystatus!=NULL)
+    {
+        mPlaystatus->pause = true;
+    }
     if (audio != NULL) {
         audio->pause();
     }
@@ -253,6 +271,10 @@ void MFFmpeg::pause() {
  * 恢复播放
  */
 void MFFmpeg::resume() {
+    if(mPlaystatus!=NULL)
+    {
+        mPlaystatus->pause = false;
+    }
     if (audio != NULL) {
         audio->resume();
     }
@@ -335,25 +357,35 @@ void MFFmpeg::seek(int64_t secs) {
     }
     if(secs >= 0 && secs <= duration)
     {
+        mPlaystatus->seek = true;
+        pthread_mutex_lock(&seek_mutex);
+
+        int64_t rel = secs*AV_TIME_BASE;
+        avformat_seek_file(pFormatCtx,-1,INT64_MIN,rel,INT64_MAX,0);
+
         if(audio!=NULL)
         {
-            mPlaystatus->seek = true;
+
             audio->queue->clearAvpacket();//跳转播放前先清空队列
             audio->clock = 0;//时间置零
             audio->last_time = 0;
-            pthread_mutex_lock(&seek_mutex);
-
-            int64_t rel = secs*AV_TIME_BASE;
-
             //清除seek时残余的前几帧
+            pthread_mutex_lock(&audio->codecMutex);
             avcodec_flush_buffers(audio->avCodecCtx);
-            //
-            avformat_seek_file(pFormatCtx,-1,INT64_MIN,rel,INT64_MAX,0);
-
-            pthread_mutex_unlock(&seek_mutex);
-            mPlaystatus->seek = false;
-
+            pthread_mutex_unlock(&audio->codecMutex);
         }
+        if(mVideo!=NULL)
+        {
+            mVideo->mQueue->clearAvpacket();//跳转播放前先清空队列
+            mVideo->clock = 0;//时间置零
+            //清除seek时残余的前几帧
+            pthread_mutex_lock(&mVideo->codecMutex);
+            avcodec_flush_buffers(mVideo->avCodecContext);
+            pthread_mutex_unlock(&mVideo->codecMutex);
+        }
+
+        pthread_mutex_unlock(&seek_mutex);//加锁否则奔溃
+        mPlaystatus->seek = false;
     }
 
 }
@@ -503,4 +535,5 @@ int MFFmpeg::getCodecContext(AVCodecParameters *avCodecParameters, AVCodecContex
     }
     return 0;
 }
+
 

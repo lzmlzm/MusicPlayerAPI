@@ -8,6 +8,8 @@
 #include "MQueue.h"
 #include "MCallJava.h"
 #include "pthread.h"
+#include "MAudio.h"
+
 extern"C"
 {
 #include <libavcodec/avcodec.h>
@@ -34,6 +36,18 @@ public:
 
     pthread_t threadPlayVideo;
 
+    MAudio *audio = NULL;
+
+    double clock = 0;
+    double delayTime = 0;
+    double defaultDelayTime = 0.01;
+
+    double video_clock = 0;
+    double framePts = 0;
+    bool frameratebig = false;
+
+    pthread_mutex_t codecMutex;
+
 public:
     MVideo(MPlaystatus *mPlaystatus, MCallJava *mCallJava);
     ~MVideo();
@@ -41,6 +55,13 @@ public:
     void playVideo();
 
     void release();
+
+    double getFrameTimeDiff(AVFrame *avFrame);
+
+    double getDelayTime(double diff);
+
+    double synchronize(AVFrame *srcFrame, double pts);
+
 
 };
 #endif //VIDEOAPP_MVIDEO_H

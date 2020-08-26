@@ -10,6 +10,8 @@ MVideo::MVideo(MPlaystatus *Playstatus, MCallJava *mCallJava) {
     this->mCallJava = mCallJava;
     mQueue = new MQueue(videoPlaystatus);
 
+    pthread_mutex_init(&codecMutex,NULL);
+
 }
 /**
  *
@@ -24,6 +26,11 @@ void *playvideo(void *data)
     {
 
         if(mVideo->videoPlaystatus->seek)
+        {
+            av_usleep(1000*100);
+            continue;
+        }
+        if(mVideo->videoPlaystatus->pause)
         {
             av_usleep(1000*100);
             continue;
@@ -56,9 +63,12 @@ void *playvideo(void *data)
             avPacket = NULL;
             continue;
         }
+
+        pthread_mutex_lock(&mVideo->codecMutex);
         if(avcodec_send_packet(mVideo->avCodecContext,avPacket) != 0)
         {
             //出错,可能有丢帧
+            pthread_mutex_unlock(&mVideo->codecMutex);
             continue;
         }
 
@@ -72,12 +82,17 @@ void *playvideo(void *data)
             av_packet_free(&avPacket);
             av_free(avPacket);
             avPacket = NULL;
+            pthread_mutex_unlock(&mVideo->codecMutex);
             continue;
         }
 
         //处理avframe，420p直接给OpenGL，非420p要转换格式
         if(avFrame->format == AV_PIX_FMT_YUV420P)
         {
+            double diff = mVideo->getFrameTimeDiff(avFrame);
+            av_usleep(mVideo->getDelayTime(diff) * 1000000);//微秒与秒的转换
+
+
             mVideo->mCallJava->onCallRenderYUV(
                     mVideo->avCodecContext->width,
                     mVideo->avCodecContext->height,
@@ -123,6 +138,7 @@ void *playvideo(void *data)
                 av_frame_free(&avFrameYUV420P);
                 av_free(avFrameYUV420P);
                 av_free(outYUV420pBuffer);
+                pthread_mutex_unlock(&mVideo->codecMutex);
                 continue;
             }
 
@@ -137,6 +153,8 @@ void *playvideo(void *data)
                     avFrameYUV420P->linesize
                     );
             //渲染
+            double diff = mVideo->getFrameTimeDiff(avFrameYUV420P);
+            av_usleep(mVideo->getDelayTime(diff) * 1000000);//微秒与秒的转换
             mVideo->mCallJava->onCallRenderYUV(
                     mVideo->avCodecContext->width,
                     mVideo->avCodecContext->height,
@@ -151,6 +169,7 @@ void *playvideo(void *data)
         av_packet_free(&avPacket);
         av_free(avPacket);
         avPacket = NULL;
+        pthread_mutex_unlock(&mVideo->codecMutex);
     }
 
     pthread_exit(&mVideo->threadPlayVideo);
@@ -172,9 +191,11 @@ void MVideo::release() {
     }
     if(avCodecContext != NULL)
     {
+        pthread_mutex_lock(&audio->codecMutex);
         avcodec_close(avCodecContext);
         avcodec_free_context(&avCodecContext);
         avCodecContext = NULL;
+        pthread_mutex_unlock(&audio->codecMutex);
     }
     if(videoPlaystatus != NULL)
     {
@@ -187,5 +208,97 @@ void MVideo::release() {
 }
 
 MVideo::~MVideo() {
-
+    pthread_mutex_destroy(&codecMutex);
 }
+
+double MVideo::getFrameTimeDiff(AVFrame *avFrame) {
+
+    //获取当前时间戳
+    double pts = av_frame_get_best_effort_timestamp(avFrame);
+    if(pts == AV_NOPTS_VALUE)
+    {
+        pts = 0;
+    }
+
+    //获取视频流
+    pts *= av_q2d(time_base);
+
+    //保存全局时钟
+    if(pts > 0)
+    {
+        clock = pts;
+    }
+
+    //音频时钟减视频时钟
+    double diff = audio->clock-clock;
+
+    return diff;
+}
+
+double MVideo::synchronize(AVFrame *srcFrame, double pts) {
+    double frame_delay;
+
+    if (pts != 0)
+        video_clock = pts; // Get pts,then set video clock to it
+    else
+        pts = video_clock; // Don't get pts,set it to video clock
+
+    frame_delay = av_q2d(time_base);
+    frame_delay += srcFrame->repeat_pict * (frame_delay * 0.5);
+
+    video_clock += frame_delay;
+
+    return pts;
+}
+
+/**
+ *
+ * @param diff
+ * @return
+ */
+double MVideo::getDelayTime(double diff) {
+
+    if(diff > 0.003)
+    {
+        delayTime = delayTime / 3 * 2;
+
+        if(delayTime < defaultDelayTime / 2)
+        {
+            delayTime = defaultDelayTime / 3 * 2;
+        }
+        else if(delayTime > defaultDelayTime * 2)
+        {
+            delayTime = defaultDelayTime * 2;
+        }
+
+    }
+    else if(diff < -0.003)
+    {
+        delayTime = delayTime * 3 / 2;
+        if(delayTime < defaultDelayTime / 2)
+        {
+            delayTime = defaultDelayTime / 3 * 2;
+        }
+        else if(delayTime > defaultDelayTime * 2)
+        {
+            delayTime = defaultDelayTime * 2;
+        }
+    }else if(diff == 0)
+    {
+        delayTime = defaultDelayTime;
+    }
+    if(diff > 1.0)
+    {
+        delayTime = 0;
+    }
+    if(diff < -1.0)
+    {
+        delayTime = defaultDelayTime * 2;
+    }
+    if(fabs(diff) > 10)
+    {
+        delayTime = defaultDelayTime;
+    }
+    return delayTime;
+}
+

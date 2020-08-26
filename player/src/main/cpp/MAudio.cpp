@@ -13,10 +13,13 @@ MAudio::MAudio(MPlaystatus *mPlaystatus, int samplerate, MCallJava *CallJava) {
     this->end_time = 0;
     this->returnPcm = false;
 
+
     queue = new MQueue(mPlaystatus);
     buffer = static_cast<uint8_t *>(av_malloc(sample_rate * 2 * 2));
 
+
     samplebuffer = static_cast<SAMPLETYPE *>(malloc(sample_rate*2*2));
+    pthread_mutex_init(&codecMutex,NULL);
     soundTouch = new SoundTouch();
 
     soundTouch->setSampleRate(sample_rate);
@@ -30,6 +33,7 @@ MAudio::MAudio(MPlaystatus *mPlaystatus, int samplerate, MCallJava *CallJava) {
 
 MAudio::~MAudio() {
     ////
+    pthread_mutex_destroy(&codecMutex);
 
 }
 
@@ -196,12 +200,14 @@ int MAudio::resampleAudio(void **pcmbuffer) {
                 continue;
             }
 
+            pthread_mutex_lock(&codecMutex);
             ret = avcodec_send_packet(avCodecCtx,avPacket);//将PACKET放到解码器进行解码
             if(ret != 0)
             {
                 av_packet_free(&avPacket);
                 av_free(avPacket);
                 avPacket = NULL;//释放内存
+                pthread_mutex_unlock(&codecMutex);
                 continue;
             }
 
@@ -249,7 +255,9 @@ int MAudio::resampleAudio(void **pcmbuffer) {
                 {
                     swr_free(&swr_ctx);
                     swr_ctx = NULL;
+
                 }
+                pthread_mutex_unlock(&codecMutex);
                 continue;
             }
             //重采样获取pcm的buffer
@@ -285,6 +293,7 @@ int MAudio::resampleAudio(void **pcmbuffer) {
             avFrame = NULL;
             swr_free(&swr_ctx);
             swr_ctx = NULL;
+            pthread_mutex_unlock(&codecMutex);
             break;
 
         }else{
@@ -292,6 +301,7 @@ int MAudio::resampleAudio(void **pcmbuffer) {
             av_frame_free(&avFrame);
             av_free(avFrame);
             avFrame = NULL;
+            pthread_mutex_unlock(&codecMutex);
             continue;
         }
 

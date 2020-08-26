@@ -42,6 +42,8 @@ public:
 
     pthread_mutex_t seek_mutex{};
 
+
+
 public:
     MFFmpeg(MPlaystatus *mPlaystatus,MCallJava *callJava, const char*url);
 
@@ -76,6 +78,8 @@ public:
     bool cutAudio(int start,int end, bool returnPcm);
 
     int getCodecContext(AVCodecParameters *avCodecParameters, AVCodecContext **avCodecCtx);
+
+
 };
 
 
