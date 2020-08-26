@@ -94,6 +94,7 @@ public class MRender implements GLSurfaceView.Renderer {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
         GLES20.glClearColor(0,0,0,1);
         renderYUV();
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP,0,4);
     }
 
     /**
@@ -214,7 +215,5 @@ public class MRender implements GLSurfaceView.Renderer {
             u=null;
             v=null;
         }
-
-
     }
 }
