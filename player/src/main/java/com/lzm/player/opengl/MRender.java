@@ -6,6 +6,8 @@ import android.opengl.GLSurfaceView;
 import android.util.Log;
 
 import com.lzm.player.R;
+import com.lzm.player.log.mylog;
+
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -90,7 +92,7 @@ public class MRender implements GLSurfaceView.Renderer {
     public void onDrawFrame(GL10 gl) {
         //对颜色缓冲区清屏
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
-        GLES20.glClearColor(1,1,1,1);
+        GLES20.glClearColor(0,0,0,1);
         renderYUV();
     }
 
@@ -105,6 +107,11 @@ public class MRender implements GLSurfaceView.Renderer {
         String fragmentShaderSource = MShaderUtil.readRawTextFile(context, R.raw.fragment_shader);
         //创建program
         program_yuv = MShaderUtil.createProgram(vertexShaderSource,fragmentShaderSource);
+        if (program_yuv == 0)
+        {
+            mylog.d("program error");
+            return;
+        }
 
         //从着色器代码中获取"av_Position" "af_Color"
 
