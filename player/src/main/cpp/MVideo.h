@@ -53,6 +53,8 @@ public:
 
     int codecType = CODEC_YUV;//默认软解码
 
+    AVBSFContext  *avbsfContext = NULL;
+
 public:
     MVideo(MPlaystatus *mPlaystatus, MCallJava *mCallJava);
     ~MVideo();

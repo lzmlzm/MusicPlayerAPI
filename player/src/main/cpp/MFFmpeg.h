@@ -44,6 +44,9 @@ public:
 
     bool supportMediaCodec = false;
 
+    const AVBitStreamFilter *avBitStreamFilter = NULL;
+
+
 
 
 public:

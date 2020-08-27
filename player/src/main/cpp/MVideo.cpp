@@ -68,12 +68,26 @@ void *playvideo(void *data)
         if(mVideo->codecType == CODEC_MEDIACODEC)
         {
             //
-
-
-
-            av_packet_free(&avPacket);
-            av_free(avPacket);
+            if(av_bsf_send_packet(mVideo->avbsfContext,avPacket) != 0)
+            {
+                av_packet_free(&avPacket);
+                av_free(avPacket);
+                avPacket = NULL;
+                continue;
+            }
+            while (av_bsf_receive_packet(mVideo->avbsfContext,avPacket) == 0)
+            {
+                LOGE("开始硬解码")
+                av_packet_free(&avPacket);
+                av_free(avPacket);
+                continue;
+            }
             avPacket = NULL;
+
+
+
+
+
 
         } else if(mVideo->codecType == CODEC_YUV)
         {
@@ -203,6 +217,12 @@ void MVideo::release() {
     {
         delete(mQueue);
         mQueue = NULL;
+    }
+
+    if(avbsfContext != NULL)
+    {
+        av_bsf_free(&avbsfContext);
+        avbsfContext = NULL;
     }
     if(avCodecContext != NULL)
     {

@@ -181,10 +181,44 @@ void MFFmpeg::start() {
     if(supportMediaCodec=callJava->onCallisSupportMediaCodec(codecName))
     {
         //支持硬解码
+        LOGE("支持硬解码");
+        if(strcasecmp(codecName, "h264") == 0)
+        {
+            //得到H264的过滤器
+            avBitStreamFilter = av_bsf_get_by_name("h264_mp4toannexb");
 
+        } else if(strcasecmp(codecName, "h265") == 0)
+        {
+            avBitStreamFilter = av_bsf_get_by_name("hevc_mp4toannexb");
+        }
 
+        if(avBitStreamFilter == NULL)
+        {
+            goto end;
+        }
+        if(av_bsf_alloc(avBitStreamFilter,&mVideo->avbsfContext)!=0)
+        {
+            supportMediaCodec = false;
+            goto end;
+        }
+        if(avcodec_parameters_copy(mVideo->avbsfContext->par_in,mVideo->avCodecParameters) < 0)
+        {
+            supportMediaCodec = false;
+            av_bsf_free(&mVideo->avbsfContext);
+            mVideo->avbsfContext = NULL;
+            goto end;
+        }
+        if(av_bsf_init(mVideo->avbsfContext))
+        {
+            supportMediaCodec = false;
+            av_bsf_free(&mVideo->avbsfContext);
+            mVideo->avbsfContext = NULL;
+            goto end;
+        }
+        mVideo->avbsfContext->time_base_in = mVideo->time_base;
     }
-
+    end:
+    supportMediaCodec = false;
     if(supportMediaCodec)
     {
         mVideo->codecType = CODEC_MEDIACODEC;
