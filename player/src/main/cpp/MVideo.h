@@ -10,6 +10,9 @@
 #include "pthread.h"
 #include "MAudio.h"
 
+#define CODEC_YUV 0
+#define CODEC_MEDIACODEC 1
+
 extern"C"
 {
 #include <libavcodec/avcodec.h>
@@ -47,6 +50,8 @@ public:
     bool frameratebig = false;
 
     pthread_mutex_t codecMutex;
+
+    int codecType = CODEC_YUV;//默认软解码
 
 public:
     MVideo(MPlaystatus *mPlaystatus, MCallJava *mCallJava);

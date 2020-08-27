@@ -14,6 +14,7 @@ import androidx.camera.core.Camera;
 import androidx.camera.core.CameraControl;
 import androidx.camera.core.CameraSelector;
 import androidx.camera.core.FocusMeteringAction;
+import androidx.camera.core.FocusMeteringResult;
 import androidx.camera.core.ImageCapture;
 import androidx.camera.core.ImageCaptureException;
 import androidx.camera.core.MeteringPoint;
@@ -56,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "lzm";
     private Mplayer mplayer;
     private TextView tvTime;
-    //private PreviewView mviewfinder;
+    private PreviewView mviewfinder;
     private ImageCapture mImageCapture;
     private MGLSurfaceView mglSurfaceView;
     private int mFacingCam = CameraSelector.LENS_FACING_BACK;//默认打开后摄
@@ -81,7 +82,7 @@ public class MainActivity extends AppCompatActivity {
 
         seekBar = findViewById(R.id.seekbar_seek);
         volume_seekBar = findViewById(R.id.volume_bar);
-        //mviewfinder = findViewById(R.id.viewFinder);
+        mviewfinder = findViewById(R.id.viewFinder);
         mglSurfaceView = findViewById(R.id.glsurfaceview);
         mplayer.setMglSurfaceView(mglSurfaceView);
 
@@ -279,8 +280,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-
-   /* //获取权限并开启摄像头
+    //获取权限并开启摄像头
     public void startCap(View view){
         if(allPermissionGranted()){
             startCamera();
@@ -336,7 +336,7 @@ public class MainActivity extends AppCompatActivity {
                                     .build();
                             ListenableFuture future =cameraControl.startFocusAndMetering(action);
 
-                            *//*future.addListener(()->{
+                            future.addListener(()->{
                                 try {
                                     FocusMeteringResult result = (FocusMeteringResult) future.get();
                                     if(result.isFocusSuccessful()){
@@ -345,7 +345,7 @@ public class MainActivity extends AppCompatActivity {
                                 }catch (Exception e){
 
                                 }
-                            }, executor);*//*
+                            }, executor);
 
                             return false;
                         }
@@ -372,10 +372,10 @@ public class MainActivity extends AppCompatActivity {
     public void takePhoto(View view){
         if(mImageCapture!=null){
             //create folder
-            *//*File dir = new File(getExternalCacheDir()"/camlzmx");
+            File dir = new File(getExternalCacheDir()+"/camlzmx");
             if(!dir.exists()){
                 dir.mkdirs();
-            }*//*
+            }
             //create files
             final File file = new File(getExternalCacheDir()+"/lzm"+System.currentTimeMillis()+".jpg");
             Log.d("Main",getExternalCacheDir()+"/lzm"+System.currentTimeMillis()+".jpg");
@@ -411,8 +411,7 @@ public class MainActivity extends AppCompatActivity {
                 CameraSelector.LENS_FACING_BACK : CameraSelector.LENS_FACING_FRONT;
         startCamera();
     }
-*/
-    /*//申请权限的回调
+    //申请权限的回调
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         //start camera when permissions have been granted otherwise exit app
@@ -437,7 +436,6 @@ public class MainActivity extends AppCompatActivity {
 
         return true;
     }
-*/
     //左右声道切换
     public void turnleft(View view) {
         mplayer.setMute(MuteEnum.MUTE_LEFT);

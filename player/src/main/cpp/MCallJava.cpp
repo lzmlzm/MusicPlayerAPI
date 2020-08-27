@@ -38,6 +38,7 @@ MCallJava::MCallJava(JavaVM *javaVM, JNIEnv *env, jobject *obj) {
     jmid_retpcm = env->GetMethodID(jlz,"onCallPcmInfo","([BI)V");
     jmid_retpcmRate = env->GetMethodID(jlz,"onCallPcmRate","(I)V");
     jmid_renderyuv = env->GetMethodID(jlz,"onCallRenderYUV","(II[B[B[B)V");
+    jmid_supportMediacodec = env->GetMethodID(jlz, "onCallisSupportMediaCodec","(Ljava/lang/String;)Z");
 }
 
 MCallJava::~MCallJava() {
@@ -289,4 +290,28 @@ void MCallJava::onCallRenderYUV(int width, int height, uint8_t *frame_y, uint8_t
     jniEnv->DeleteLocalRef(jbyteV);
 
     javaVM->DetachCurrentThread();
+}
+
+bool MCallJava::onCallisSupportMediaCodec(const char *codecName) {
+
+    bool support = false;
+    JNIEnv *jniEnv;
+    if (javaVM->AttachCurrentThread(&jniEnv, 0) != JNI_OK)
+    {
+        if(LOG_DEBUG)
+        {
+            LOGE("oncallmediacodec error");
+        }
+        return support;
+    }
+
+    jstring type = jniEnv->NewStringUTF(codecName);
+
+    support = jniEnv->CallBooleanMethod(jobj, jmid_supportMediacodec, type);
+
+    jniEnv->DeleteLocalRef(type);
+    javaVM->DetachCurrentThread();
+
+    return support;
+
 }

@@ -42,6 +42,8 @@ public:
 
     pthread_mutex_t seek_mutex{};
 
+    bool supportMediaCodec = false;
+
 
 
 public:

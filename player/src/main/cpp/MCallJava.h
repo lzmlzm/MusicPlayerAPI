@@ -30,6 +30,7 @@ public:
     jmethodID jmid_retpcm;
     jmethodID jmid_retpcmRate;
     jmethodID jmid_renderyuv;
+    jmethodID jmid_supportMediacodec;
 public:
     MCallJava(JavaVM *javaVM, JNIEnv *env, jobject *obj);
 
@@ -54,6 +55,8 @@ public:
     void onCallPcmRate(int samplerate);
 
     void onCallRenderYUV(int width,int height,uint8_t *frame_y,uint8_t *frame_u,uint8_t *frame_v);
+
+    bool onCallisSupportMediaCodec(const char *codecName);
 };
 
 

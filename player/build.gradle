@@ -5,7 +5,7 @@ android {
 
 
     defaultConfig {
-        minSdkVersion 25
+        minSdkVersion 21
         targetSdkVersion 29
         versionCode 1
         versionName "1.0"
@@ -17,8 +17,6 @@ android {
                 abiFilters 'arm64-v8a','armeabi-v7a','x86'
             }
         }
-        testFunctionalTest false
-        testHandleProfiling false
     }
 
     buildTypes {

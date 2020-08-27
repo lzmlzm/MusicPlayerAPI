@@ -13,6 +13,7 @@ import com.lzm.player.listener.MOnValueDBListener;
 import com.lzm.player.log.mylog;
 import com.lzm.player.muteenum.MuteEnum;
 import com.lzm.player.opengl.MGLSurfaceView;
+import com.lzm.player.util.MVideoSupportUtil;
 
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
@@ -760,6 +761,11 @@ public class Mplayer {
                 break;
         }
         return rate;
+    }
+
+    public boolean onCallisSupportMediaCodec(String codecType)
+    {
+        return MVideoSupportUtil.isSupportCodec(codecType);
     }
 
 }

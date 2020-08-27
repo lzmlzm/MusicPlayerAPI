@@ -163,6 +163,7 @@ void MFFmpeg::decodeFFmpegThread() {
  * 开始解码
  */
 void MFFmpeg::start() {
+
     if(audio == NULL)
     {
         if(LOG_DEBUG)
@@ -172,10 +173,27 @@ void MFFmpeg::start() {
         }
         return;
     }
+
+    supportMediaCodec = false;
+    mVideo->audio = audio;
+
+    const char *codecName = reinterpret_cast<const char *>(mVideo->avCodecContext->codec);
+    if(supportMediaCodec=callJava->onCallisSupportMediaCodec(codecName))
+    {
+        //支持硬解码
+
+
+    }
+
+    if(supportMediaCodec)
+    {
+        mVideo->codecType = CODEC_MEDIACODEC;
+    }
+
     //
     //开始从队列接收数据并播放
     //
-    mVideo->audio = audio;
+
     audio->play();
     mVideo->playVideo();
     //检测播放状态
@@ -187,7 +205,7 @@ void MFFmpeg::start() {
             continue;
         }
         //缓存30个包
-        if(audio->queue->getQueueSIze() > 50)
+        if(audio->queue->getQueueSIze() > 40)
         {
             av_usleep(1000*100);
             continue;//存40帧再处理数据
