@@ -20,6 +20,7 @@ import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.Surface;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -50,6 +51,9 @@ public class Mplayer {
     private static  boolean initMediacodec = false;
     int defaultvolume = 60;
 
+    private MediaFormat mediaFormat;
+    private MediaCodec mediaCodec;
+
     private MOnPreparedListener mOnPreparedListener;//准备接口
     private MOnLoadListener mOnLoadListener;//加载接口
     private MOnPauseResumeListener mOnPauseResumeListener;//暂停恢复接口
@@ -61,6 +65,9 @@ public class Mplayer {
     private MOnCompleteListener mOnCompleteListener;
     private MOnPcmInfoListener mOnPcmInfoListener;
     private MGLSurfaceView mglSurfaceView;
+    private Surface surface;
+
+    private MediaCodec.BufferInfo info;
 
     public  Mplayer(){}
 
@@ -547,7 +554,7 @@ public class Mplayer {
 
     //mediacodec参数设置
     private MediaFormat encoderFormat = null;
-    private MediaCodec mediaCodec = null;
+    //private MediaCodec mediaCodec = null;
     private MediaCodecInfo mediaCodecInfo = null;
     private FileOutputStream outputStream = null;
     private MediaCodec.BufferInfo bufferInfo = null;
@@ -767,5 +774,121 @@ public class Mplayer {
     {
         return MVideoSupportUtil.isSupportCodec(codecType);
     }
+
+    /**
+     * 初始化MediaCodec
+     * @param codecName
+     * @param width
+     * @param height
+     * @param csd0
+     * @param csd1
+     */
+    public void initMediaCodec(String codecName, int width, int height, byte[] csd0, byte[] csd1)
+    {
+        if(surface!=null)
+        {
+            try {
+                String mime = MVideoSupportUtil.findVideoCodecName(codecName);
+                mediaFormat = MediaFormat.createVideoFormat(mime, width, height);
+                /*mediaFormat.setInteger(MediaFormat.KEY_WIDTH, width);
+                mediaFormat.setInteger(MediaFormat.KEY_HEIGHT, height);*/
+                mediaFormat.setLong(MediaFormat.KEY_MAX_INPUT_SIZE, width * height);
+                mediaFormat.setByteBuffer("csd-0", ByteBuffer.wrap(csd0));
+                mediaFormat.setByteBuffer("csd-1", ByteBuffer.wrap(csd1));
+
+
+                mylog.d(mediaFormat.toString());
+                mediaCodec = MediaCodec.createDecoderByType(mime);
+
+                //初始化
+                if (surface != null) {
+                    mediaCodec.configure(mediaFormat, surface, null, 0);
+                    mediaCodec.start();//开始解码
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }else
+        {
+            if(mOnErrorListener!=null)
+            {
+                mOnErrorListener.OnError(2001,"surface is none");
+            }
+        }
+
+    }
+
+    /**
+     *
+     * @param datasize
+     * @param data
+     */
+    public void decodeAVPacket(int datasize, byte[] data)
+    {
+        if(surface != null && datasize > 0 && data != null&& mediaCodec != null)
+        {
+            try{
+                //填充数据
+                int intputBufferIndex = mediaCodec.dequeueInputBuffer(10);
+                if(intputBufferIndex >= 0)
+                {
+                    ByteBuffer byteBuffer = mediaCodec.getInputBuffers()[intputBufferIndex];
+                    byteBuffer.clear();
+                    byteBuffer.put(data);//放入数据
+                    //入队
+                    mediaCodec.queueInputBuffer(intputBufferIndex, 0, datasize, 0, 0);
+                }
+                //出队
+                int outputBufferIndex = mediaCodec.dequeueOutputBuffer(info, 10);
+                while(outputBufferIndex >= 0)
+                {
+                    mediaCodec.releaseOutputBuffer(outputBufferIndex, true);
+                    outputBufferIndex = mediaCodec.dequeueOutputBuffer(info, 10);
+                }
+            }catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
+    /**
+     *
+     */
+   /* private void releaseMedicacodec()
+    {
+        if(encoder == null)
+        {
+            return;
+        }
+        try {
+            recordTime = 0;
+            outputStream.close();
+            outputStream = null;
+            encoder.stop();
+            encoder.release();
+            encoder = null;
+            encoderFormat = null;
+            info = null;
+            initmediacodec = false;
+
+            MyLog.d("录制完成...");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        finally {
+            if(outputStream != null)
+            {
+                try {
+                    outputStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                outputStream = null;
+            }
+        }
+    }
+}*/
 
 }

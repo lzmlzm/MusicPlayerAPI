@@ -31,6 +31,8 @@ public:
     jmethodID jmid_retpcmRate;
     jmethodID jmid_renderyuv;
     jmethodID jmid_supportMediacodec;
+    jmethodID jmid_initMediaCodec;
+    jmethodID jmid_decodeavpacket;
 public:
     MCallJava(JavaVM *javaVM, JNIEnv *env, jobject *obj);
 
@@ -57,6 +59,10 @@ public:
     void onCallRenderYUV(int width,int height,uint8_t *frame_y,uint8_t *frame_u,uint8_t *frame_v);
 
     bool onCallisSupportMediaCodec(const char *codecName);
+
+    void onCallInitMediaCodec(const char *mime, int width,int height,int csd0_size,int csd1_size, uint8_t *csd0, uint8_t *csd1);
+
+    void onCallDecodeAvPacket(int datasize, uint8_t *pdata);
 };
 
 

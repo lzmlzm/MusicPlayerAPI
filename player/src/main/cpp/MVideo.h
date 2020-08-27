@@ -63,7 +63,7 @@ public:
 
     void release();
 
-    double getFrameTimeDiff(AVFrame *avFrame);
+    double getFrameTimeDiff(AVFrame *avFrame,AVPacket *avPacket);
 
     double getDelayTime(double diff);
 

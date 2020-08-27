@@ -3,6 +3,8 @@ package com.lzm.player.util;
 import android.media.MediaCodecInfo;
 import android.media.MediaCodecList;
 
+import com.lzm.player.log.mylog;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -45,6 +47,7 @@ public class MVideoSupportUtil {
             {
                 if(types[j].equals(findVideoCodecName(codecType)))
                 {
+                    mylog.d("支持");
                     supportVideo = true;
                     break;
                 }

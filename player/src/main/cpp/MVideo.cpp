@@ -77,7 +77,15 @@ void *playvideo(void *data)
             }
             while (av_bsf_receive_packet(mVideo->avbsfContext,avPacket) == 0)
             {
-                LOGE("开始硬解码")
+                LOGE("开始硬解码");
+
+                double diff = mVideo->getFrameTimeDiff(NULL,avPacket);
+                LOGE("diff is %f",diff);
+
+                av_usleep(mVideo->getDelayTime(diff) * 1000000);//微秒与秒的转换
+
+                mVideo->mCallJava->onCallDecodeAvPacket(avPacket->size,avPacket->data);
+
                 av_packet_free(&avPacket);
                 av_free(avPacket);
                 continue;
@@ -116,7 +124,7 @@ void *playvideo(void *data)
             //处理avframe，420p直接给OpenGL，非420p要转换格式
             if(avFrame->format == AV_PIX_FMT_YUV420P)
             {
-                double diff = mVideo->getFrameTimeDiff(avFrame);
+                double diff = mVideo->getFrameTimeDiff(avFrame,NULL);
                 av_usleep(mVideo->getDelayTime(diff) * 1000000);//微秒与秒的转换
 
 
@@ -180,7 +188,7 @@ void *playvideo(void *data)
                         avFrameYUV420P->linesize
                 );
                 //渲染
-                double diff = mVideo->getFrameTimeDiff(avFrameYUV420P);
+                double diff = mVideo->getFrameTimeDiff(avFrameYUV420P,NULL);
                 av_usleep(mVideo->getDelayTime(diff) * 1000000);//微秒与秒的转换
                 mVideo->mCallJava->onCallRenderYUV(
                         mVideo->avCodecContext->width,
@@ -246,10 +254,18 @@ MVideo::~MVideo() {
     pthread_mutex_destroy(&codecMutex);
 }
 
-double MVideo::getFrameTimeDiff(AVFrame *avFrame) {
-
+double MVideo::getFrameTimeDiff(AVFrame *avFrame,AVPacket *avPacket) {
     //获取当前时间戳
-    double pts = av_frame_get_best_effort_timestamp(avFrame);
+    double pts = 0;
+    if(avFrame != NULL)
+    {
+        pts = av_frame_get_best_effort_timestamp(avFrame);
+    }
+    if(avPacket!=NULL)
+    {
+        pts = avPacket->pts;
+    }
+
     if(pts == AV_NOPTS_VALUE)
     {
         pts = 0;

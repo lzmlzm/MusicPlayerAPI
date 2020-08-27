@@ -177,8 +177,9 @@ void MFFmpeg::start() {
     supportMediaCodec = false;
     mVideo->audio = audio;
 
-    const char *codecName = reinterpret_cast<const char *>(mVideo->avCodecContext->codec);
-    if(supportMediaCodec=callJava->onCallisSupportMediaCodec(codecName))
+    const char *codecName = ((const AVCodec*)(mVideo->avCodecContext->codec))->name;
+    supportMediaCodec = callJava->onCallisSupportMediaCodec(codecName);
+    if(supportMediaCodec)
     {
         //支持硬解码
         LOGE("支持硬解码");
@@ -218,10 +219,19 @@ void MFFmpeg::start() {
         mVideo->avbsfContext->time_base_in = mVideo->time_base;
     }
     end:
-    supportMediaCodec = false;
+
     if(supportMediaCodec)
     {
         mVideo->codecType = CODEC_MEDIACODEC;
+        mVideo->mCallJava->onCallInitMediaCodec(
+                codecName,
+                mVideo->avCodecContext->width,
+                mVideo->avCodecContext->height,
+                mVideo->avCodecContext->extradata_size,
+                mVideo->avCodecContext->extradata_size,
+                mVideo->avCodecContext->extradata,
+                mVideo->avCodecContext->extradata
+                );
     }
 
     //
