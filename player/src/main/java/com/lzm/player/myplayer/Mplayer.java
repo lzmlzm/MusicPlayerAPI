@@ -19,6 +19,7 @@ import com.lzm.player.util.MVideoSupportUtil;
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
+import android.opengl.GLES20;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.Surface;
@@ -149,11 +150,12 @@ public class Mplayer {
         mtimeInfo = null;
         duration = -1;//停止的时候还原值
         stopRecord();
-        MedicacodecRelease();
+
         new Thread(new Runnable() {
             @Override
             public void run() {
                 n_stop();
+                MedicacodecRelease();
             }
         }).start();
     }
@@ -402,7 +404,7 @@ public class Mplayer {
     public void onCallComplete()
     {
         stop();
-        if(mOnCompleteListener==null)
+        if(mOnCompleteListener!=null)
         {
             mOnCompleteListener.onCallComplete();
         }
@@ -854,9 +856,16 @@ public class Mplayer {
     {
        if(mediaCodec !=null)
        {
-           mediaCodec.flush();
-           mediaCodec.stop();
-           mediaCodec.release();
+           try
+           {
+               mediaCodec.flush();
+               mediaCodec.stop();
+               mediaCodec.release();
+           }catch (Exception e)
+           {
+               e.printStackTrace();
+           }
+
            mediaCodec = null;
            mediaFormat = null;
            info = null;

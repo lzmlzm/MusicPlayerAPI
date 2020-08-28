@@ -23,9 +23,16 @@ JavaVM *javaVM = NULL;
 MCallJava *callJava = NULL;
 MFFmpeg *mfFmpeg = NULL;
 MPlaystatus *mPlaystatus = NULL;
-
+pthread_t thread_start;
 bool next = true;
 
+
+void *startcallback(void *data)
+{
+    MFFmpeg *mfFmpeg = (MFFmpeg *)data;
+    mfFmpeg->start();
+    return 0;
+}
 extern "C"
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved)
 {
@@ -39,7 +46,6 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved)
 
     return JNI_VERSION_1_4;
 }
-
 
 extern "C"
 JNIEXPORT void JNICALL
@@ -67,7 +73,7 @@ Java_com_lzm_player_myplayer_Mplayer_n_1start(JNIEnv *env, jobject instance) {
     if(mfFmpeg != NULL)
     {
         //ffmpeg开始解码
-        mfFmpeg->start();
+        pthread_create(&thread_start, NULL, startcallback, mfFmpeg);
     }
 
 }extern "C"
@@ -104,6 +110,9 @@ Java_com_lzm_player_myplayer_Mplayer_n_1stop(JNIEnv *env, jobject instance) {
     if(mfFmpeg != NULL)
     {
         mfFmpeg->release();
+
+        pthread_join(thread_start,NULL);
+
         delete(mfFmpeg);
         mfFmpeg = NULL;
         if(callJava != NULL)

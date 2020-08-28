@@ -49,7 +49,8 @@ void *decodeplay(void *data)
     //创建音频播放器进入音频播放状态
     mAudio->initOpenSLES();
 
-    pthread_exit(&mAudio->pthread_play);
+    //pthread_exit(&mAudio->pthread_play);
+    return 0;
 }
 
 /**
@@ -150,10 +151,13 @@ void *pcmSplitCallback(void *data)
  */
 void MAudio::play() {
 
-    //创建音频播放器线程
-    pthread_create(&pthread_play, NULL, decodeplay, this);
-    //pcm数据分包线程
-    pthread_create(&pcm_callbackThread,NULL, pcmSplitCallback,this);
+    if(mPlaystatus !=NULL && !mPlaystatus->exit)
+    {
+        //创建音频播放器线程
+        pthread_create(&pthread_play, NULL, decodeplay, this);
+        //pcm数据分包线程
+        pthread_create(&pcm_callbackThread,NULL, pcmSplitCallback,this);
+    }
 
 }
 
@@ -524,7 +528,15 @@ void MAudio::stop() {
  */
 void MAudio::release() {
 
+    if(queue != NULL)
+    {
+        queue->noticeQueue();
+    }
+
+    pthread_join(pthread_play,NULL);
     stop();
+
+    LOGE("音频停止")
     if (mBufferQueue!=NULL)
     {
         mBufferQueue->noticeThread();

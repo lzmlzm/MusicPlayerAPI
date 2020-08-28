@@ -312,13 +312,13 @@ bool MCallJava::onCallisSupportMediaCodec(const char *codecName) {
     jstring type = jniEnv->NewStringUTF(codecName);
     support = jniEnv->CallBooleanMethod(jobj, jmid_supportMediacodec, type);
     jniEnv->DeleteLocalRef(type);
-    /*javaVM->DetachCurrentThread();*/
+    javaVM->DetachCurrentThread();
     return support;
 }
 
 void MCallJava::onCallInitMediaCodec(const char *mime, int width,int height,int csd0_size,int csd1_size,  uint8_t *csd0, uint8_t *csd1) {
 
-    //JNIEnv *jniEnv;
+    JNIEnv *jniEnv;
 
     if (javaVM->AttachCurrentThread(&jniEnv, 0) != JNI_OK)
     {
@@ -344,7 +344,7 @@ void MCallJava::onCallInitMediaCodec(const char *mime, int width,int height,int 
     jniEnv->DeleteLocalRef(jbytecsd0);
     jniEnv->DeleteLocalRef(jbytecsd1);
 
-    //javaVM->DetachCurrentThread();
+    javaVM->DetachCurrentThread();
 }
 
 void MCallJava::onCallDecodeAvPacket(int datasize, uint8_t *pdata) {

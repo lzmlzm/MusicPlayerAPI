@@ -24,7 +24,7 @@ public:
 
     const char *url = NULL;
 
-    pthread_t  decodeThread{};
+    pthread_t  decodeThread;
 
     AVFormatContext *pFormatCtx = NULL;//上下文
 
@@ -34,13 +34,13 @@ public:
 
     MPlaystatus *mPlaystatus = NULL;
 
-    pthread_mutex_t init_mutex{};
+    pthread_mutex_t init_mutex;
 
     bool exit = false;
 
     int duration = 0;
 
-    pthread_mutex_t seek_mutex{};
+    pthread_mutex_t seek_mutex;
 
     bool supportMediaCodec = false;
 

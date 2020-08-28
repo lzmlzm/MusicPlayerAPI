@@ -24,7 +24,7 @@ void *decodeFFmpeg(void *data)
 {
     MFFmpeg *mfFmpeg = (MFFmpeg *)data;//数据强制转换
     mfFmpeg->decodeFFmpegThread();
-    pthread_exit(&mfFmpeg->decodeThread);
+    return 0;
 }
 /**
  * 资源解析
@@ -51,6 +51,7 @@ int avformat_callback(void *ctx)
  * ffmpeg资源解析函数
  */
 void MFFmpeg::decodeFFmpegThread() {
+
     pthread_mutex_lock(&init_mutex);
 
     //2.网络初始化
@@ -307,15 +308,17 @@ void MFFmpeg::start() {
         }
     }
 
-    //？？？待注释
+    /*//？？？待注释
     while(audio->queue->getQueueSIze() > 0) {
         AVPacket *avPacket = av_packet_alloc();
         audio->queue->outAvpacket(avPacket);
+        LOGE("..............................................")
         av_packet_free(&avPacket);
         av_free(avPacket);
         avPacket = NULL;
-    }
+    }*/
     callJava->onCallComplete(CHILD_THREAD);
+    exit = true;
 }
 
 /**
@@ -347,12 +350,14 @@ void MFFmpeg::resume() {
  * 资源释放
  */
 void MFFmpeg::release() {
-
     if(mPlaystatus->exit)
     {
         return;
     }
     mPlaystatus->exit = true;
+
+    pthread_join(decodeThread,NULL);
+
     pthread_mutex_lock(&init_mutex);
 
     int sleepCount = 0;
@@ -372,14 +377,12 @@ void MFFmpeg::release() {
     }
     if(audio != NULL)
     {
-
         audio->release();
         delete(audio);
         audio = NULL;
     }
     if(mVideo != NULL)
     {
-
         mVideo->release();
         delete(mVideo);
         mVideo = NULL;
@@ -397,6 +400,10 @@ void MFFmpeg::release() {
     if(callJava != NULL)
     {
         callJava = NULL;
+    }
+    if(mPlaystatus!= NULL)
+    {
+        mPlaystatus = NULL;
     }
     pthread_mutex_unlock(&init_mutex);
 

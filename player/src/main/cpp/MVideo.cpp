@@ -92,11 +92,6 @@ void *playvideo(void *data)
             }
             avPacket = NULL;
 
-
-
-
-
-
         } else if(mVideo->codecType == CODEC_YUV)
         {
             pthread_mutex_lock(&mVideo->codecMutex);
@@ -209,18 +204,32 @@ void *playvideo(void *data)
 
     }
 
-    pthread_exit(&mVideo->threadPlayVideo);
+    return 0;
+    //pthread_exit(&mVideo->threadPlayVideo);
 }
 /**
  *
  */
 void MVideo::playVideo() {
-    pthread_create(&threadPlayVideo,NULL,playvideo,this);
+
+    if(videoPlaystatus !=NULL && !videoPlaystatus->exit)
+    {
+        pthread_create(&threadPlayVideo,NULL,playvideo,this);
+    }
 }
 /**
  *
  */
 void MVideo::release() {
+
+    //等待线程退出
+    if(mQueue != NULL)
+    {
+        mQueue->noticeQueue();
+    }
+
+    pthread_join(threadPlayVideo,NULL);
+
     if(mQueue != NULL)
     {
         delete(mQueue);
@@ -234,11 +243,11 @@ void MVideo::release() {
     }
     if(avCodecContext != NULL)
     {
-        pthread_mutex_lock(&audio->codecMutex);
+        pthread_mutex_lock(&codecMutex);
         avcodec_close(avCodecContext);
         avcodec_free_context(&avCodecContext);
         avCodecContext = NULL;
-        pthread_mutex_unlock(&audio->codecMutex);
+        pthread_mutex_unlock(&codecMutex);
     }
     if(videoPlaystatus != NULL)
     {

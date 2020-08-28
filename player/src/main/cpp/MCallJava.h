@@ -33,6 +33,7 @@ public:
     jmethodID jmid_supportMediacodec;
     jmethodID jmid_initMediaCodec;
     jmethodID jmid_decodeavpacket;
+    jmethodID jmid_clearlastframe;
 public:
     MCallJava(JavaVM *javaVM, JNIEnv *env, jobject *obj);
 
@@ -63,6 +64,8 @@ public:
     void onCallInitMediaCodec(const char *mime, int width,int height,int csd0_size,int csd1_size, uint8_t *csd0, uint8_t *csd1);
 
     void onCallDecodeAvPacket(int datasize, uint8_t *pdata);
+
+
 };
 
 

@@ -156,7 +156,6 @@ public class MRender implements GLSurfaceView.Renderer, SurfaceTexture.OnFrameAv
             renderMediaCodec();
         }
 
-
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP,0,4);
     }
 
@@ -367,5 +366,11 @@ public class MRender implements GLSurfaceView.Renderer, SurfaceTexture.OnFrameAv
     public interface OnRenderListener
     {
         void onRender();
+    }
+
+    public void clearLastframe()
+    {
+        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
+        GLES20.glClearColor(0,0,0,1);
     }
 }

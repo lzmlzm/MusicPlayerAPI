@@ -107,3 +107,10 @@ void MQueue::clearAvpacket() {
     }
     pthread_mutex_unlock(&mutexPacket);
 }
+
+void MQueue::noticeQueue() {
+
+    pthread_cond_signal(&condPacket);
+    pthread_mutex_unlock(&mutexPacket);
+
+}
