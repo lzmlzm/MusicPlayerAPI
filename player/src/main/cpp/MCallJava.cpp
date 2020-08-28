@@ -39,7 +39,7 @@ MCallJava::MCallJava(JavaVM *javaVM, JNIEnv *env, jobject *obj) {
     jmid_retpcmRate = env->GetMethodID(jlz,"onCallPcmRate","(I)V");
     jmid_renderyuv = env->GetMethodID(jlz,"onCallRenderYUV","(II[B[B[B)V");
     jmid_supportMediacodec = env->GetMethodID(jlz, "onCallisSupportMediaCodec","(Ljava/lang/String;)Z");
-    jmid_initMediaCodec = env->GetMethodID(jlz, "initMediaCodec","(Ljava/lang/String;II[B[B)V");
+    jmid_initMediaCodec = env->GetMethodID(jlz, "MediaCodecInit","(Ljava/lang/String;II[B[B)V");
     jmid_decodeavpacket = env->GetMethodID(jlz, "decodeAVPacket", "(I[B)V");
 
 }
@@ -357,7 +357,6 @@ void MCallJava::onCallDecodeAvPacket(int datasize, uint8_t *pdata) {
         }
         return;
     }
-
     jbyteArray data = jniEnv->NewByteArray(datasize);
     jniEnv->SetByteArrayRegion(data, 0, datasize, reinterpret_cast<const jbyte *>(pdata));
     jniEnv->CallVoidMethod(jobj, jmid_decodeavpacket, datasize, data);

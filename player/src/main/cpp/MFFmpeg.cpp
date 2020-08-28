@@ -223,6 +223,7 @@ void MFFmpeg::start() {
     if(supportMediaCodec)
     {
         mVideo->codecType = CODEC_MEDIACODEC;
+        LOGE("初始化硬解码器")
         mVideo->mCallJava->onCallInitMediaCodec(
                 codecName,
                 mVideo->avCodecContext->width,

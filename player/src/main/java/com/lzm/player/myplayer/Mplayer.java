@@ -13,6 +13,7 @@ import com.lzm.player.listener.MOnValueDBListener;
 import com.lzm.player.log.mylog;
 import com.lzm.player.muteenum.MuteEnum;
 import com.lzm.player.opengl.MGLSurfaceView;
+import com.lzm.player.opengl.MRender;
 import com.lzm.player.util.MVideoSupportUtil;
 
 import android.media.MediaCodec;
@@ -65,7 +66,7 @@ public class Mplayer {
     private MOnCompleteListener mOnCompleteListener;
     private MOnPcmInfoListener mOnPcmInfoListener;
     private MGLSurfaceView mglSurfaceView;
-    private Surface surface;
+    private Surface surface_mediacodec;
 
     private MediaCodec.BufferInfo info;
 
@@ -148,6 +149,7 @@ public class Mplayer {
         mtimeInfo = null;
         duration = -1;//停止的时候还原值
         stopRecord();
+        MedicacodecRelease();
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -227,7 +229,19 @@ public class Mplayer {
      * @param mglSurfaceView
      */
     public void setMglSurfaceView(MGLSurfaceView mglSurfaceView) {
+
         this.mglSurfaceView = mglSurfaceView;
+
+        this.mglSurfaceView.getmRender().setOnSurfaceCreateListener(new MRender.OnSurfaceCreateListener() {
+            @Override
+            public void OnSurfaceCreate(Surface s) {
+                if(surface_mediacodec == null)
+                {
+                    surface_mediacodec = s;
+                    mylog.d("OnSurfaceCreate");
+                }
+            }
+        });
     }
 
     /**
@@ -519,38 +533,10 @@ public class Mplayer {
     {
         if(mglSurfaceView!=null)
         {
+            mglSurfaceView.getmRender().setRenderType(MRender.RENDER_YUV);
             mglSurfaceView.setYUVData(width,height,y,u,v);
         }
     }
-
-    //解码音频
-    private native void n_prepared(String source);
-
-    private native void n_start();
-
-    private native void n_pause();
-
-    private native void n_reusme();
-
-    private native void n_stop();
-
-    private native void n_seek(int secs);
-
-    private native int n_duration();
-
-    private native void n_volume(int percent);
-
-    private native void n_mute(int mute);
-
-    private native void n_pitch(float pitch);
-
-    private native void n_speed(float speed);
-
-    private native int n_samplerate();
-
-    private native void n_record(boolean start);
-
-    private native  boolean n_cutaudio(int start_time,int end_time,boolean returnpcm);
 
     //mediacodec参数设置
     private MediaFormat encoderFormat = null;
@@ -783,15 +769,17 @@ public class Mplayer {
      * @param csd0
      * @param csd1
      */
-    public void initMediaCodec(String codecName, int width, int height, byte[] csd0, byte[] csd1)
+    public void MediaCodecInit(String codecName, int width, int height, byte[] csd0, byte[] csd1)
     {
-        if(surface!=null)
+        if(surface_mediacodec != null)
         {
             try {
+                //设置渲染模式
+                mglSurfaceView.getmRender().setRenderType(MRender.RENDER_MEDIACODEC);
                 String mime = MVideoSupportUtil.findVideoCodecName(codecName);
                 mediaFormat = MediaFormat.createVideoFormat(mime, width, height);
-                /*mediaFormat.setInteger(MediaFormat.KEY_WIDTH, width);
-                mediaFormat.setInteger(MediaFormat.KEY_HEIGHT, height);*/
+                mediaFormat.setInteger(MediaFormat.KEY_WIDTH, width);
+                mediaFormat.setInteger(MediaFormat.KEY_HEIGHT, height);
                 mediaFormat.setLong(MediaFormat.KEY_MAX_INPUT_SIZE, width * height);
                 mediaFormat.setByteBuffer("csd-0", ByteBuffer.wrap(csd0));
                 mediaFormat.setByteBuffer("csd-1", ByteBuffer.wrap(csd1));
@@ -800,9 +788,11 @@ public class Mplayer {
                 mylog.d(mediaFormat.toString());
                 mediaCodec = MediaCodec.createDecoderByType(mime);
 
+                info = new MediaCodec.BufferInfo();
+
                 //初始化
-                if (surface != null) {
-                    mediaCodec.configure(mediaFormat, surface, null, 0);
+                if (surface_mediacodec != null) {
+                    mediaCodec.configure(mediaFormat, surface_mediacodec, null, 0);
                     mediaCodec.start();//开始解码
                 }
             } catch (Exception e) {
@@ -825,7 +815,7 @@ public class Mplayer {
      */
     public void decodeAVPacket(int datasize, byte[] data)
     {
-        if(surface != null && datasize > 0 && data != null&& mediaCodec != null)
+        if(surface_mediacodec != null && datasize > 0 && data != null&& mediaCodec != null)
         {
             try{
                 //填充数据
@@ -850,45 +840,61 @@ public class Mplayer {
                 e.printStackTrace();
             }
         }
+        else{
+            mylog.d("decode error");
+            return;
+        }
     }
 
 
     /**
-     *
+     *硬解码释放
      */
-   /* private void releaseMedicacodec()
+    private void MedicacodecRelease()
     {
-        if(encoder == null)
-        {
-            return;
-        }
-        try {
-            recordTime = 0;
-            outputStream.close();
-            outputStream = null;
-            encoder.stop();
-            encoder.release();
-            encoder = null;
-            encoderFormat = null;
-            info = null;
-            initmediacodec = false;
+       if(mediaCodec !=null)
+       {
+           mediaCodec.flush();
+           mediaCodec.stop();
+           mediaCodec.release();
+           mediaCodec = null;
+           mediaFormat = null;
+           info = null;
 
-            MyLog.d("录制完成...");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        finally {
-            if(outputStream != null)
-            {
-                try {
-                    outputStream.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                outputStream = null;
-            }
-        }
+       }
     }
-}*/
+
+
+
+    //解码音频
+    private native void n_prepared(String source);
+
+    private native void n_start();
+
+    private native void n_pause();
+
+    private native void n_reusme();
+
+    private native void n_stop();
+
+    private native void n_seek(int secs);
+
+    private native int n_duration();
+
+    private native void n_volume(int percent);
+
+    private native void n_mute(int mute);
+
+    private native void n_pitch(float pitch);
+
+    private native void n_speed(float speed);
+
+    private native int n_samplerate();
+
+    private native void n_record(boolean start);
+
+    private native  boolean n_cutaudio(int start_time,int end_time,boolean returnpcm);
+
+
 
 }

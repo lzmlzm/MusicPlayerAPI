@@ -1,9 +1,12 @@
 package com.lzm.player.opengl;
 import android.content.Context;
+import android.graphics.SurfaceTexture;
+import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
 
 import android.opengl.GLSurfaceView;
 import android.util.Log;
+import android.view.Surface;
 
 import com.lzm.player.R;
 import com.lzm.player.log.mylog;
@@ -16,7 +19,10 @@ import java.nio.FloatBuffer;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-public class MRender implements GLSurfaceView.Renderer {
+public class MRender implements GLSurfaceView.Renderer, SurfaceTexture.OnFrameAvailableListener {
+
+    public static final int RENDER_YUV = 1;
+    public static final int RENDER_MEDIACODEC = 2;
 
     private final float[] vertexData={
             -1f,-1f,
@@ -35,12 +41,11 @@ public class MRender implements GLSurfaceView.Renderer {
     private FloatBuffer vertexBuffer;
     private FloatBuffer textureBuffer;
 
-
+    //YUV
     private Context context;
     private int program_yuv;
     private int avPosition_yuv;
     private int afPosition_yuv;
-    private int texture_Id;
 
     private int sample_y;
     private int sample_u;
@@ -55,6 +60,20 @@ public class MRender implements GLSurfaceView.Renderer {
     private ByteBuffer v;
 
     private int[] textureId_yuv;
+
+    //MediaCodec
+    private int program_meidacodec;
+    private int avPosition_meidacodec;
+    private int afPosition_meidacodec;
+    private int samplerOES_mediacodec;
+    private int textureid_mediacodec;
+
+    private SurfaceTexture surfaceTexture;
+    private Surface surface;
+    private OnSurfaceCreateListener onSurfaceCreateListener;
+    private OnRenderListener onRenderListener;
+
+    private int renderType = RENDER_YUV;
 
     //构造方法
     public  MRender(Context context)
@@ -75,12 +94,44 @@ public class MRender implements GLSurfaceView.Renderer {
 
     }
 
+    /**
+     * 设置渲染模式
+     * @param renderType
+     */
+    public void setRenderType(int renderType) {
+        this.renderType = renderType;
+    }
+
+    /**
+     * 设置surface回调接口
+     * @param onSurfaceCreateListener
+     */
+    public void setOnSurfaceCreateListener(OnSurfaceCreateListener onSurfaceCreateListener) {
+        this.onSurfaceCreateListener = onSurfaceCreateListener;
+    }
+
+    public void setOnRenderListener(OnRenderListener onRenderListener) {
+        this.onRenderListener = onRenderListener;
+    }
+
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
         //初始化YUV纹理
         initRenderYUV();
+        initRenderMediaCodec();
     }
 
+    /**
+     * 硬解码监听
+     * @param surfaceTexture
+     */
+    @Override
+    public void onFrameAvailable(SurfaceTexture surfaceTexture) {
+        if(onRenderListener != null)
+        {
+            onRenderListener.onRender();
+        }
+    }
 
     @Override
     public void onSurfaceChanged(GL10 gl, int width, int height) {
@@ -93,7 +144,19 @@ public class MRender implements GLSurfaceView.Renderer {
         //对颜色缓冲区清屏
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
         GLES20.glClearColor(0,0,0,1);
-        renderYUV();
+
+        //渲染模式判断
+        if(renderType == RENDER_YUV)
+        {
+            renderYUV();
+
+        }else if(renderType == RENDER_MEDIACODEC)
+        {
+            mylog.d("开始渲染");
+            renderMediaCodec();
+        }
+
+
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP,0,4);
     }
 
@@ -170,7 +233,6 @@ public class MRender implements GLSurfaceView.Renderer {
             GLES20.glEnableVertexAttribArray(avPosition_yuv);
             //将param5：顶点坐标传入
             GLES20.glVertexAttribPointer(avPosition_yuv,2,GLES20.GL_FLOAT,false,8, vertexBuffer);//2*4=8
-            textureBuffer.position(0);
             //使能片源坐标
             GLES20.glEnableVertexAttribArray(afPosition_yuv);
             //将param5：纹理坐标传入
@@ -215,5 +277,95 @@ public class MRender implements GLSurfaceView.Renderer {
             u=null;
             v=null;
         }
+    }
+
+    /**
+     * 初始化硬解码
+     */
+    public void initRenderMediaCodec()
+    {
+        //从文件中读取顶点shader源码
+        String vertexShaderSource = MShaderUtil.readRawTextFile(context, R.raw.vertex_shader);
+        //从文件中读取片源shader源码
+        String fragmentShaderSource = MShaderUtil.readRawTextFile(context, R.raw.fragment_mediacodec);
+        //创建program
+        program_meidacodec = MShaderUtil.createProgram(vertexShaderSource,fragmentShaderSource);
+        if (program_meidacodec == 0)
+        {
+            mylog.d("program error");
+            return;
+        }
+
+        //从着色器代码中获取"av_Position" "af_Color"
+
+        avPosition_meidacodec = GLES20.glGetAttribLocation(program_meidacodec,"av_Position");
+        afPosition_meidacodec = GLES20.glGetAttribLocation(program_meidacodec,"af_Position");
+
+        samplerOES_mediacodec = GLES20.glGetUniformLocation(program_meidacodec,"sTexture");
+
+        int [] textureids = new int[1];
+        GLES20.glGenTextures(1,textureids,0);
+        textureid_mediacodec = textureids[0];
+
+        //设置环绕方式:
+        //s,t=x,y,超出边界的重复绘制
+        GLES20.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_REPEAT);
+        GLES20.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_REPEAT);
+        //设置过滤方式,纹理像素映射到坐标点
+        GLES20.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
+        GLES20.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
+        mylog.d("初始化mediacodec");
+
+        surfaceTexture = new SurfaceTexture(textureid_mediacodec);
+        surface = new Surface(surfaceTexture);
+
+        //数据回调监听
+        surfaceTexture.setOnFrameAvailableListener(this);
+
+        //传过去surface
+        if(onSurfaceCreateListener !=null)
+        {
+            mylog.d("回传surface");
+            onSurfaceCreateListener.OnSurfaceCreate(surface);
+        }
+
+    }
+
+    /**
+     * 硬解码渲染
+     */
+    private void renderMediaCodec()
+    {
+        //更新数据
+        surfaceTexture.updateTexImage();
+        GLES20.glUseProgram(program_meidacodec);
+
+        //使能顶点坐标
+        GLES20.glEnableVertexAttribArray(avPosition_meidacodec);
+        //将param5：顶点坐标传入
+        GLES20.glVertexAttribPointer(avPosition_meidacodec,2,GLES20.GL_FLOAT,false,8, vertexBuffer);//2*4=8
+        //使能片源坐标
+        GLES20.glEnableVertexAttribArray(afPosition_meidacodec);
+        //将param5：纹理坐标传入
+        GLES20.glVertexAttribPointer(afPosition_meidacodec,2,GLES20.GL_FLOAT,false,8, textureBuffer);//
+
+        //激活纹理
+        GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
+        //绑定纹理
+        GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, textureid_mediacodec);
+        //使用纹理
+        GLES20.glUniform1i(samplerOES_mediacodec,0);
+
+
+    }
+
+    public interface OnSurfaceCreateListener
+    {
+        void OnSurfaceCreate(Surface s);
+    }
+
+    public interface OnRenderListener
+    {
+        void onRender();
     }
 }
