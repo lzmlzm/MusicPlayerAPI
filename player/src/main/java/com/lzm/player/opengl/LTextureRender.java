@@ -3,6 +3,7 @@ package com.lzm.player.opengl;
 import android.content.Context;
 import android.graphics.SurfaceTexture;
 import android.opengl.GLES20;
+import android.util.Log;
 import android.view.Surface;
 
 import com.lzm.player.R;
@@ -27,10 +28,10 @@ public class LTextureRender implements LEGLSurfaceView.MGLRender {
     };
 
     private final float[] textureData={
-            0f,1f,
-            1f,1f,
             0f,0f,
-            1f,0f
+            1f,0f,
+            0f,1f,
+            1f,1f
     };
 
     private FloatBuffer vertexBuffer;
@@ -72,6 +73,8 @@ public class LTextureRender implements LEGLSurfaceView.MGLRender {
     //VBO buffer
     private int vboid;
 
+    private int fboid;
+
     public LTextureRender(Context context) {
         this.context = context;
 
@@ -90,7 +93,6 @@ public class LTextureRender implements LEGLSurfaceView.MGLRender {
 
     @Override
     public void onSurfaceCreated() {
-
         initRenderYUV();
     }
 
@@ -133,6 +135,7 @@ public class LTextureRender implements LEGLSurfaceView.MGLRender {
         sample_u = GLES20.glGetUniformLocation(program_yuv,"sampler_u");
         sample_v = GLES20.glGetUniformLocation(program_yuv,"sampler_v");
 
+
         //创建VBO数组
         int [] vbos = new int[1];
         //令GLES生成VBO数据buffer
@@ -147,6 +150,15 @@ public class LTextureRender implements LEGLSurfaceView.MGLRender {
         GLES20.glBufferSubData(GLES20.GL_ARRAY_BUFFER,0,vertexData.length*4,vertexBuffer);
         GLES20.glBufferSubData(GLES20.GL_ARRAY_BUFFER,0,textureData.length*4,textureBuffer);
         GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER,0);
+        //创建FBO数组
+        int [] fbos = new int[1];
+        //令GLES生成FBO数据buffer
+        GLES20.glGenBuffers(1,fbos,0);
+        fboid = fbos[0];
+
+        //绑定FBO
+        GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER,fboid);
+
 
         //创建YUV纹理
         textureId_yuv = new int[3];
@@ -162,6 +174,19 @@ public class LTextureRender implements LEGLSurfaceView.MGLRender {
             //设置过滤方式,纹理像素映射到坐标点
             GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
             GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
+
+            //设置FBO并分配内存大小
+            GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D,0,GLES20.GL_RGBA,
+                    1080,2340,0,GLES20.GL_RGBA,GLES20.GL_UNSIGNED_BYTE,null);
+            //绑定FBO纹理
+            GLES20.glFramebufferTexture2D(GLES20.GL_FRAMEBUFFER,GLES20.GL_COLOR_ATTACHMENT0,
+                    GLES20.GL_TEXTURE_2D,textureId_yuv[i],0);
+            if(GLES20.glCheckFramebufferStatus(GLES20.GL_FRAMEBUFFER)!=GLES20.GL_FRAMEBUFFER_COMPLETE)
+            {
+                Log.e("lzm", "initRenderYUV: bind FBO error");
+            }else{
+                Log.e("lzm", "initRenderYUV: bind FBO success");
+            }
         }
     }
 
@@ -174,6 +199,7 @@ public class LTextureRender implements LEGLSurfaceView.MGLRender {
         {
             GLES20.glUseProgram(program_yuv);
 
+            GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER,fboid);
             //绑定VBO
             GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER,vboid);
             //使能顶点坐标
@@ -184,6 +210,9 @@ public class LTextureRender implements LEGLSurfaceView.MGLRender {
             GLES20.glEnableVertexAttribArray(afPosition_yuv);
             //将param5：纹理坐标传入,从VBO偏移textureData.length*4即为片源顶点数据
             GLES20.glVertexAttribPointer(afPosition_yuv,2,GLES20.GL_FLOAT,false,8, textureData.length*4);//2*4=8
+
+            GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER,0);
+            GLES20.glBindBuffer(GLES20.GL_FRAMEBUFFER,0);
 
             //激活纹理
             GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
@@ -216,7 +245,7 @@ public class LTextureRender implements LEGLSurfaceView.MGLRender {
             GLES20.glUniform1i(sample_u,1);
             GLES20.glUniform1i(sample_v,2);
             GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
-            GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER,0);
+
             y.clear();
             u.clear();
             v.clear();
