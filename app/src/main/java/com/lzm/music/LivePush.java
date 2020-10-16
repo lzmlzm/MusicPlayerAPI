@@ -6,9 +6,8 @@ import android.opengl.GLES20;
 import android.os.Bundle;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-import android.view.View;
 
-import com.lzm.player.opengl.MEglHelper;
+import com.lzm.player.opengl.LEGLHelper;
 
 public class LivePush extends AppCompatActivity {
 
@@ -34,7 +33,7 @@ public class LivePush extends AppCompatActivity {
                         super.run();
 
                         //初始化EGLHELPER
-                        MEglHelper mEglHelper = new MEglHelper();
+                        LEGLHelper mEglHelper = new LEGLHelper();
                         mEglHelper.initEgl(holder.getSurface(),null);
 
                         while (true)

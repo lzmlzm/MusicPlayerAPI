@@ -8,7 +8,9 @@ import android.view.Surface;
 
 import com.lzm.player.log.mylog;
 
-public class MGLSurfaceView extends GLSurfaceView {
+
+//用于渲染视频播放器
+public abstract class MGLSurfaceView extends GLSurfaceView {
 
     private MRender mRender;
 
@@ -36,7 +38,6 @@ public class MGLSurfaceView extends GLSurfaceView {
         });
 
     }
-
 
 
     public void setYUVData(int width, int height, byte[] y,  byte[] u,  byte[] v)
