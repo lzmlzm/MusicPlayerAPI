@@ -3,6 +3,7 @@ package com.lzm.player.opengl;
 import android.content.Context;
 import android.graphics.SurfaceTexture;
 import android.opengl.GLES20;
+import android.opengl.Matrix;
 import android.util.Log;
 import android.view.Surface;
 
@@ -75,6 +76,13 @@ public class LTextureRender implements LEGLSurfaceView.MGLRender {
 
     private int fboid;
 
+    private  int u_Matrix;
+
+    //具体的变换矩阵值
+    private float[] u_Matrix_data = new float[16];
+    private int width;
+    private int height;
+
     public LTextureRender(Context context) {
         this.context = context;
 
@@ -98,7 +106,23 @@ public class LTextureRender implements LEGLSurfaceView.MGLRender {
 
     @Override
     public void onSurfaceChanged(int width, int height) {
-        GLES20.glViewport(0,0,width,height);
+        this.width = width;
+        this.height = height;
+
+        //正交变换
+        width = 1080;
+        height = 1920;
+
+        if(width > height)
+        {
+            Matrix.orthoM(u_Matrix_data, 0, -width / ((height / 702f) * 526f),  width / ((height / 702f) * 526f), -1f, 1f, -1f, 1f);
+        }
+        else
+        {
+            Matrix.orthoM(u_Matrix_data, 0, -1,  1, -height / ((width / 526f) * 702f), height / ((width / 526f) * 702f), -1f, 1f);
+        }
+
+        Matrix.rotateM(u_Matrix_data, 0, 180, 1, 0, 0);
     }
 
     @Override
@@ -130,6 +154,8 @@ public class LTextureRender implements LEGLSurfaceView.MGLRender {
 
         avPosition_yuv = GLES20.glGetAttribLocation(program_yuv,"av_Position");
         afPosition_yuv = GLES20.glGetAttribLocation(program_yuv,"af_Position");
+        //获取正交投影矩阵
+        u_Matrix = GLES20.glGetAttribLocation(program_yuv,"u_Matrix");
 
         sample_y = GLES20.glGetUniformLocation(program_yuv,"sampler_y");
         sample_u = GLES20.glGetUniformLocation(program_yuv,"sampler_u");
@@ -198,6 +224,8 @@ public class LTextureRender implements LEGLSurfaceView.MGLRender {
         if(width_yuv > 0 && height_yuv > 0 && y != null && u != null && v != null)
         {
             GLES20.glUseProgram(program_yuv);
+
+            GLES20.glUniformMatrix4fv(u_Matrix, 1, false, u_Matrix_data, 0);
 
             GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER,fboid);
             //绑定VBO

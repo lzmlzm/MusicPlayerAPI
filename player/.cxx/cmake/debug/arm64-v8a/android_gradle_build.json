@@ -4,9 +4,9 @@
     "1": "--target=aarch64-none-linux-android21 --gcc-toolchain=C:/Users/nxf65025/AppData/Local/Android/Sdk/ndk/21.0.6113669/toolchains/llvm/prebuilt/windows-x86_64 --sysroot=C:/Users/nxf65025/AppData/Local/Android/Sdk/ndk/21.0.6113669/toolchains/llvm/prebuilt/windows-x86_64/sysroot -Dnative_lib_EXPORTS -IC:/Users/nxf65025/AndroidStudioProjects/VideoAPP/player/src/main/cpp/include -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -frtti -fexceptions -std=c++11 -O0 -fno-limit-debug-info -fPIC"
   },
   "buildFiles": [
+    "C:\\Users\\nxf65025\\AndroidStudioProjects\\VideoAPP\\player\\src\\main\\cpp\\CMakeLists.txt",
     "C:\\Users\\nxf65025\\AppData\\Local\\Android\\Sdk\\ndk\\21.0.6113669\\build\\cmake\\android.toolchain.cmake",
-    "C:\\Users\\nxf65025\\AppData\\Local\\Android\\Sdk\\ndk\\21.0.6113669\\build\\cmake\\platforms.cmake",
-    "C:\\Users\\nxf65025\\AndroidStudioProjects\\VideoAPP\\player\\src\\main\\cpp\\CMakeLists.txt"
+    "C:\\Users\\nxf65025\\AppData\\Local\\Android\\Sdk\\ndk\\21.0.6113669\\build\\cmake\\platforms.cmake"
   ],
   "cleanCommands": [
     "C:\\Users\\nxf65025\\AppData\\Local\\Android\\Sdk\\cmake\\3.10.2.4988404\\bin\\ninja.exe -C \"C:\\Users\\nxf65025\\AndroidStudioProjects\\VideoAPP\\player\\.cxx\\cmake\\debug\\arm64-v8a\" clean"

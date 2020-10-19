@@ -1,8 +1,8 @@
 {
   "buildFiles": [
+    "C:\\Users\\nxf65025\\AndroidStudioProjects\\VideoAPP\\player\\src\\main\\cpp\\CMakeLists.txt",
     "C:\\Users\\nxf65025\\AppData\\Local\\Android\\Sdk\\ndk\\21.0.6113669\\build\\cmake\\android.toolchain.cmake",
-    "C:\\Users\\nxf65025\\AppData\\Local\\Android\\Sdk\\ndk\\21.0.6113669\\build\\cmake\\platforms.cmake",
-    "C:\\Users\\nxf65025\\AndroidStudioProjects\\VideoAPP\\player\\src\\main\\cpp\\CMakeLists.txt"
+    "C:\\Users\\nxf65025\\AppData\\Local\\Android\\Sdk\\ndk\\21.0.6113669\\build\\cmake\\platforms.cmake"
   ],
   "cleanCommands": [
     "C:\\Users\\nxf65025\\AppData\\Local\\Android\\Sdk\\cmake\\3.10.2.4988404\\bin\\ninja.exe -C \"C:\\Users\\nxf65025\\AndroidStudioProjects\\VideoAPP\\player\\.cxx\\cmake\\debug\\arm64-v8a\" clean"

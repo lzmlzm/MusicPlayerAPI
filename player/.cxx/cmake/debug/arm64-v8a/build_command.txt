@@ -1,4 +1,4 @@
-Executable : C:\Users\nxf65025\AppData\Local\Android\Sdk\cmake\3.10.2.4988404\bin\cmake.exe
+                Executable : C:\Users\nxf65025\AppData\Local\Android\Sdk\cmake\3.10.2.4988404\bin\cmake.exe
 arguments : 
 -HC:\Users\nxf65025\AndroidStudioProjects\VideoAPP\player\src\main\cpp
 -DCMAKE_CXX_FLAGS=-frtti -fexceptions
